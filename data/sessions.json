@@ -1,0 +1,394 @@
+[
+  {
+    "session_id": "639ef182-6e4a-43cf-8925-0446b79aed64",
+    "patient_id": "Test",
+    "timestamp": "2026-06-07T10:20:36.600823+00:00",
+    "mvc_force": 3354.972713379166,
+    "mvc_emg": 1006.258240397971,
+    "target_percentage": 20.0,
+    "target_force": 670.9945426758333,
+    "target_range": {
+      "lower": 603.89508840825,
+      "upper": 738.0939969434166
+    },
+    "force_n": 668.7616703912951,
+    "total_emg_rms": 115.5999389682169,
+    "percent_mvc_force": 19.933445888378355,
+    "percent_mvc_emg": 11.488098613979806,
+    "nme": 1.7351388213295322,
+    "trend": "stable",
+    "emg_clipped": false,
+    "emg_baseline": 5.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-07T10:20:33.477942+00:00",
+      "ended_at": "2026-06-07T10:20:36.549035+00:00",
+      "duration_seconds": 3.0710930824279785,
+      "sample_count": 675,
+      "estimated_sample_rate_hz": 219.46583249347222,
+      "force_n": 668.7616703912951,
+      "peak_force_n": 707.76,
+      "total_emg_rms": 115.5999389682169,
+      "peak_emg_rms": 165.1386774112535,
+      "emg_rms_windows": [
+        165.1386774112535,
+        102.79918946517999,
+        104.31511734725593,
+        93.17776746963798,
+        101.68909738550092,
+        110.59455857908387,
+        131.48516511960628
+      ],
+      "emg_peak_raw": 312.0,
+      "emg_baseline": 5.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 5.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  },
+  {
+    "session_id": "e10794e8-60e7-449c-a55f-304dbe72a64d",
+    "patient_id": "M",
+    "timestamp": "2026-06-07T11:49:07.118427+00:00",
+    "mvc_force": 3909.653230438318,
+    "mvc_emg": 942.5310672758949,
+    "target_percentage": 20.0,
+    "target_force": 781.9306460876637,
+    "target_range": {
+      "lower": 703.7375814788974,
+      "upper": 860.1237106964302
+    },
+    "force_n": 803.7309261388502,
+    "total_emg_rms": 173.43227669416584,
+    "percent_mvc_force": 20.557601371944244,
+    "percent_mvc_emg": 18.40069603174144,
+    "nme": 1.117218682189093,
+    "trend": "stable",
+    "emg_clipped": false,
+    "emg_baseline": 24.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-07T11:49:04.033768+00:00",
+      "ended_at": "2026-06-07T11:49:07.058044+00:00",
+      "duration_seconds": 3.0242760181427,
+      "sample_count": 731,
+      "estimated_sample_rate_hz": 241.3800842319661,
+      "force_n": 803.7309261388502,
+      "peak_force_n": 852.5,
+      "total_emg_rms": 173.43227669416584,
+      "peak_emg_rms": 190.5084226957753,
+      "emg_rms_windows": [
+        181.98137898506502,
+        169.56477857484526,
+        178.77940687044412,
+        190.5084226957753,
+        171.63420027541247,
+        146.0280875953957,
+        175.5296618622228
+      ],
+      "emg_peak_raw": 327.0,
+      "emg_baseline": 24.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 24.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  },
+  {
+    "session_id": "b2b59b53-0997-4547-bd6f-179904afff62",
+    "patient_id": "M",
+    "timestamp": "2026-06-07T11:58:32.842729+00:00",
+    "mvc_force": 4351.704507595307,
+    "mvc_emg": 1056.0497027687272,
+    "target_percentage": 20.0,
+    "target_force": 870.3409015190615,
+    "target_range": {
+      "lower": 783.3068113671553,
+      "upper": 957.3749916709677
+    },
+    "force_n": 830.2962182498312,
+    "total_emg_rms": 176.01410420761772,
+    "percent_mvc_force": 19.079793143138794,
+    "percent_mvc_emg": 16.667217816183076,
+    "nme": 1.144749732892626,
+    "trend": "stable",
+    "emg_clipped": false,
+    "emg_baseline": 28.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-07T11:58:29.751767+00:00",
+      "ended_at": "2026-06-07T11:58:32.754947+00:00",
+      "duration_seconds": 3.0031800270080566,
+      "sample_count": 715,
+      "estimated_sample_rate_hz": 237.74798499553438,
+      "force_n": 830.2962182498312,
+      "peak_force_n": 880.18,
+      "total_emg_rms": 176.01410420761772,
+      "peak_emg_rms": 200.14262121505783,
+      "emg_rms_windows": [
+        154.7460315913313,
+        178.75979024739252,
+        164.931039768745,
+        179.89680958127963,
+        167.4958625122771,
+        200.14262121505783,
+        186.12657453724063
+      ],
+      "emg_peak_raw": 313.0,
+      "emg_baseline": 28.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 28.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  },
+  {
+    "session_id": "3b4bb143-cb9a-4fc9-9e8c-51f0b51d7354",
+    "patient_id": "M",
+    "timestamp": "2026-06-07T12:02:15.265160+00:00",
+    "mvc_force": 4033.9219640206334,
+    "mvc_emg": 1083.9080733664705,
+    "target_percentage": 20.0,
+    "target_force": 806.7843928041267,
+    "target_range": {
+      "lower": 726.105953523714,
+      "upper": 887.4628320845394
+    },
+    "force_n": 770.0802800471154,
+    "total_emg_rms": 116.00538506711928,
+    "percent_mvc_force": 19.09011346564503,
+    "percent_mvc_emg": 10.702511395345768,
+    "nme": 1.7837041008848449,
+    "trend": "up",
+    "emg_clipped": false,
+    "emg_baseline": 57.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-07T12:02:12.180727+00:00",
+      "ended_at": "2026-06-07T12:02:15.183257+00:00",
+      "duration_seconds": 3.002530097961426,
+      "sample_count": 695,
+      "estimated_sample_rate_hz": 231.1383990692359,
+      "force_n": 770.0802800471154,
+      "peak_force_n": 815.71,
+      "total_emg_rms": 116.00538506711928,
+      "peak_emg_rms": 141.0408411536919,
+      "emg_rms_windows": [
+        137.1660651564523,
+        141.0408411536919,
+        127.00405353421903,
+        119.18977378740088,
+        107.78249418051018,
+        99.09231022296572,
+        80.76215743459505
+      ],
+      "emg_peak_raw": 275.0,
+      "emg_baseline": 57.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 57.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  },
+  {
+    "session_id": "ff1a104b-6f15-4754-8133-5df567361c3a",
+    "patient_id": "M",
+    "timestamp": "2026-06-07T12:11:10.342727+00:00",
+    "mvc_force": 3431.227716522622,
+    "mvc_emg": 899.3595051902776,
+    "target_percentage": 20.0,
+    "target_force": 686.2455433045244,
+    "target_range": {
+      "lower": 617.620988974072,
+      "upper": 754.8700976349769
+    },
+    "force_n": 663.3622586891973,
+    "total_emg_rms": 104.69368751449227,
+    "percent_mvc_force": 19.333087556237214,
+    "percent_mvc_emg": 11.640916331044082,
+    "nme": 1.6607874334325032,
+    "trend": "down",
+    "emg_clipped": false,
+    "emg_baseline": 76.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-07T12:11:07.278717+00:00",
+      "ended_at": "2026-06-07T12:11:10.280805+00:00",
+      "duration_seconds": 3.0020880699157715,
+      "sample_count": 636,
+      "estimated_sample_rate_hz": 211.51944420398564,
+      "force_n": 663.3622586891973,
+      "peak_force_n": 699.87,
+      "total_emg_rms": 104.69368751449227,
+      "peak_emg_rms": 140.6228876608712,
+      "emg_rms_windows": [
+        98.07115290511962,
+        88.3547897034692,
+        103.0032432461346,
+        119.13212221072268,
+        100.23418242549633,
+        83.43743444963219,
+        140.6228876608712
+      ],
+      "emg_peak_raw": 288.0,
+      "emg_baseline": 76.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 76.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  },
+  {
+    "session_id": "8ab7fd3e-8c5a-4c07-867f-b5767bbe1a75",
+    "patient_id": "M",
+    "timestamp": "2026-06-07T12:25:44.294648+00:00",
+    "mvc_force": 3633.3772027832247,
+    "mvc_emg": 673.0579312084657,
+    "target_percentage": 20.0,
+    "target_force": 726.675440556645,
+    "target_range": {
+      "lower": 654.0078965009805,
+      "upper": 799.3429846123095
+    },
+    "force_n": 697.0914910553654,
+    "total_emg_rms": 93.1441945808241,
+    "percent_mvc_force": 19.185772688874202,
+    "percent_mvc_emg": 13.838956538790809,
+    "nme": 1.386359776121573,
+    "trend": "down",
+    "emg_clipped": false,
+    "emg_baseline": 56.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-07T12:25:41.213665+00:00",
+      "ended_at": "2026-06-07T12:25:44.213766+00:00",
+      "duration_seconds": 3.00010085105896,
+      "sample_count": 1397,
+      "estimated_sample_rate_hz": 465.3176907393787,
+      "force_n": 697.0914910553654,
+      "peak_force_n": 785.8,
+      "total_emg_rms": 93.1441945808241,
+      "peak_emg_rms": 138.01536339479262,
+      "emg_rms_windows": [
+        63.294649496428555,
+        93.90335534483597,
+        70.86381939719585,
+        72.77217347520363,
+        138.01536339479262,
+        80.93380698810638,
+        132.22619396920578
+      ],
+      "emg_peak_raw": 297.0,
+      "emg_baseline": 56.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 56.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  },
+  {
+    "session_id": "9891bfb7-96ad-4472-a9c3-88050e136fa1",
+    "patient_id": "Marissa",
+    "timestamp": "2026-06-10T07:50:24.930525+00:00",
+    "mvc_force": 24.71229414777371,
+    "mvc_emg": 493.46087153457574,
+    "target_percentage": 20.0,
+    "target_force": 4.9424588295547425,
+    "target_range": {
+      "lower": 4.448212946599268,
+      "upper": 5.436704712510217
+    },
+    "force_n": 4.830303787868407,
+    "total_emg_rms": 172.2328857202667,
+    "percent_mvc_force": 19.546156900627377,
+    "percent_mvc_emg": 34.90304817576579,
+    "nme": 0.5600128906276687,
+    "trend": "stable",
+    "emg_clipped": false,
+    "emg_baseline": 6.0,
+    "warnings": [],
+    "trial": {
+      "started_at": "2026-06-10T07:50:21.906593+00:00",
+      "ended_at": "2026-06-10T07:50:24.910109+00:00",
+      "duration_seconds": 3.0035159587860107,
+      "sample_count": 679,
+      "estimated_sample_rate_hz": 225.73544116410835,
+      "force_n": 4.830303787868407,
+      "peak_force_n": 5.12,
+      "total_emg_rms": 172.2328857202667,
+      "peak_emg_rms": 189.3265755726825,
+      "emg_rms_windows": [
+        176.18085754606682,
+        189.3265755726825,
+        169.15155413088831,
+        181.2663320503087,
+        159.51660580208227,
+        162.86911617370282,
+        167.3191587661353
+      ],
+      "emg_peak_raw": 257.0,
+      "emg_baseline": 6.0,
+      "emg_saturated_fraction": 0.0,
+      "emg_clipped": false,
+      "processing": {
+        "emg_notch_hz": 60.0,
+        "force_low_pass_hz": 10.0,
+        "emg_window_seconds": 0.5,
+        "emg_baseline_subtracted": 6.0,
+        "emg_saturation_level": 3685.5
+      }
+    },
+    "setup": {
+      "load_cell_calibration_factor": null
+    }
+  }
+]

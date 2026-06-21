@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nervify — NME Measurement</title>
+<link rel="stylesheet" href="/static/styles.css?v=2" />
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">Nervi<span>fy</span></div>
+    <div class="sub">Neuromuscular Efficiency Measurement</div>
+  </div>
+  <div class="grow"></div>
+  <div class="settings">
+    <label style="margin:0">API</label>
+    <input id="apiBase" type="text" placeholder="http://127.0.0.1:8000" />
+  </div>
+  <div class="conn" id="conn">
+    <span class="dot" id="connDot"></span>
+    <span id="connText">Connecting…</span>
+  </div>
+  <div class="pill" id="phasePill">phase: idle</div>
+</header>
+
+<div class="wrap">
+  <!-- Sidebar -->
+  <aside>
+    <nav class="stepper" id="stepper"></nav>
+    <div class="live">
+      <h4>Live Signal</h4>
+      <canvas id="liveChart" style="width:100%;height:96px;display:block;margin:4px 0 10px;border-radius:8px;background:#0c141d;border:1px solid var(--line)"></canvas>
+      <div class="row" style="font-size:11px;color:var(--muted);margin:-4px 0 6px"><span style="color:var(--accent)">▬ force</span><span style="color:var(--blue)">▬ EMG</span><span>last 15s</span></div>
+      <div class="row"><span>Force</span><span><b id="liveForce">—</b><span class="unit">N</span></span></div>
+      <div class="row"><span class="muted" style="font-size:12px">≈ mass</span><span class="muted" style="font-size:12px"><b id="liveForceG">—</b> <span class="unit">g</span></span></div>
+      <div class="row"><span>EMG</span><span><b id="liveEmg">—</b><span class="unit">raw</span></span></div>
+      <div class="row"><span class="muted" style="font-size:12px">Samples</span><span class="muted" id="liveSamples" style="font-size:12px">0</span></div>
+      <div class="row"><span class="muted" style="font-size:12px">Rejected</span><span class="muted" id="liveRejected" style="font-size:12px">0</span></div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content" id="content"></main>
+</div>
+
+<div id="toast"></div>
+
+<script src="/static/app.js?v=5"></script>
+</body>
+</html>
