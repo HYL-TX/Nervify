@@ -2,8 +2,7 @@
 #
 # Application entry point: builds the FastAPI app, wires CORS, serves the
 # frontend assets, mounts the route modules, and starts the serial reader.
-# Run with `uvicorn backend.main:app --reload` (or `uvicorn app:app` via the
-# root shim).
+# Run with `uvicorn backend.main:app --reload`.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

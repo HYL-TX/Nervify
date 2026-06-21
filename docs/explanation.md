@@ -8,7 +8,7 @@ finish.
 From the project folder, run:
 
 ```bash
-uvicorn app:app --reload
+uvicorn backend.main:app --reload
 ```
 
 Then open the API docs:

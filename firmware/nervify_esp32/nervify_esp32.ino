@@ -5,7 +5,7 @@
 //
 // Streams one JSON object per line over USB serial, e.g.
 //   {"force":2.95,"emg":189}
-// which the FastAPI backend (app.py) parses in parse_serial_line().
+// which the FastAPI backend parses in backend/serial_io.py.
 //
 // It also accepts one command back from the host: a line reading "TARE"
 // re-zeros the load cell (scale.tare()). The backend sends this when the

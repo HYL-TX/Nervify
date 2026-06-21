@@ -1,0 +1,41 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Editors / OS ----
+.DS_Store
+.idea/
+
+# Keep the shared VS Code env settings; ignore everything else under .vscode
+.vscode/*
+!.vscode/settings.json
+
+# ---- Claude Code ----
+# Machine-specific permission allowlist; shared config (.claude/settings.json) is fine to commit
+.claude/settings.local.json
+
+# ---- Nervify runtime data ----
+# Session results are generated at runtime and may contain patient identifiers.
+# The backend recreates data/sessions.json (as []) on first save.
+data/sessions.json
+data/sessions.json.bak
+*.pdf

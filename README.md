@@ -18,11 +18,15 @@ a per-patient PDF report.
 pip install -r requirements.txt
 
 # 2. start the server (serves the API and the UI)
-uvicorn backend.main:app --reload        # or: uvicorn app:app --reload
+uvicorn backend.main:app --reload
 
 # 3. open the UI
 #    http://127.0.0.1:8000/ui
 ```
+
+`requirements.txt` lists the top-level dependencies; `requirements.txt.lock`
+pins the exact versions used during development — install from it
+(`pip install -r requirements.txt.lock`) if you need a reproducible environment.
 
 API docs (interactive Swagger): <http://127.0.0.1:8000/docs>
 
@@ -104,7 +108,6 @@ backend/              FastAPI application (Python)
     ├── session.py    session lifecycle, saved results, PDF report
     ├── mvc.py        MVC capture
     └── trial.py      20% MVC monitoring trial
-app.py                compatibility shim → `from backend.main import app`
 frontend/             single-page UI: index.html + styles.css + app.js
 firmware/             ESP32 Arduino sketch (firmware/nervify_esp32/)
 data/                 sessions.json result log (created on first save)

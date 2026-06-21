@@ -14,7 +14,7 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 DATA_DIR = BASE_DIR / "data"
 SESSION_LOG_PATH = DATA_DIR / "sessions.json"
 
-# Override without editing source: NERVIFY_SERIAL_PORT=/dev/cu.usbmodemXXXX uvicorn app:app
+# Override without editing source: NERVIFY_SERIAL_PORT=/dev/cu.usbmodemXXXX uvicorn backend.main:app
 SERIAL_PORT = os.environ.get("NERVIFY_SERIAL_PORT", "/dev/cu.usbmodem14101")
 BAUD_RATE = 115200
 TARGET_PERCENTAGE = 20.0
