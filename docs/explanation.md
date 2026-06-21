@@ -65,8 +65,7 @@ Body:
 
 ```json
 {
-  "target_percentage": 20,
-  "load_cell_calibration_factor": null
+  "target_percentage": 20
 }
 ```
 

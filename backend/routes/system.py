@@ -103,9 +103,6 @@ def add_manual_sample(sample: ManualSampleRequest) -> dict[str, Any]:
 @router.post("/setup")
 def update_setup(request: SetupRequest) -> dict[str, Any]:
     state.runtime_setup["target_percentage"] = request.target_percentage
-    state.runtime_setup["load_cell_calibration_factor"] = (
-        request.load_cell_calibration_factor
-    )
     return dict(state.runtime_setup)
 
 
@@ -147,6 +144,23 @@ def tare_load_cell() -> dict[str, Any]:
     }
 
 
+@router.post("/demo/start")
+def demo_start() -> dict[str, Any]:
+    """Enter demo mode: the serial reader ignores real device samples so the
+    presentation demo can drive the pipeline with synthetic samples."""
+    with state.lock:
+        state.demo_active = True
+    return {"status": "ok", "demo_active": True}
+
+
+@router.post("/demo/stop")
+def demo_stop() -> dict[str, Any]:
+    """Leave demo mode and resume normal device sample ingestion."""
+    with state.lock:
+        state.demo_active = False
+    return {"status": "ok", "demo_active": False}
+
+
 @router.get("/workflow")
 def get_workflow() -> dict[str, Any]:
     with state.lock:
@@ -158,9 +172,6 @@ def get_workflow() -> dict[str, Any]:
                     "name": "One-time device setup",
                     "done": state.runtime_setup["target_percentage"] is not None,
                     "target_percentage": state.runtime_setup["target_percentage"],
-                    "load_cell_calibration_factor": state.runtime_setup[
-                        "load_cell_calibration_factor"
-                    ],
                 },
                 {
                     "step": 1,

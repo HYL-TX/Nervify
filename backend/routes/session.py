@@ -24,9 +24,6 @@ def start_session(request: StartSessionRequest) -> dict[str, Any]:
             patient_id=request.patient_id,
             started_at=iso_now(),
             target_percentage=state.runtime_setup["target_percentage"],
-            load_cell_calibration_factor=state.runtime_setup[
-                "load_cell_calibration_factor"
-            ],
         )
         return session.serialize_session(state.current_session)
 

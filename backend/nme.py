@@ -28,7 +28,7 @@ def trend_for(nme: float) -> str:
         if patient_id is None or session.get("patient_id") == patient_id
     ]
     if not previous:
-        return "stable"
+        return "baseline"
 
     previous_nme = previous[-1].get("nme")
     if not isinstance(previous_nme, (int, float)) or previous_nme == 0:
@@ -88,7 +88,4 @@ def calculate_nme(session: state.SessionState, processed: dict[str, Any]) -> dic
         "emg_baseline": processed.get("emg_baseline"),
         "warnings": warnings,
         "trial": processed,
-        "setup": {
-            "load_cell_calibration_factor": session.load_cell_calibration_factor,
-        },
     }

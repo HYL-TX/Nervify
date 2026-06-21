@@ -40,7 +40,7 @@ function fail(err) { toast(err.message || String(err), "err"); }
 
 /* ---------------- State ---------------- */
 const STEPS = [
-  { id: "setup",   title: "Device Setup",   sub: "Target % · calibration" },
+  { id: "setup",   title: "Device Setup",   sub: "Target %" },
   { id: "session", title: "Session",        sub: "Start patient session" },
   { id: "prep",    title: "Preparation",    sub: "Skin · electrode · hand" },
   { id: "mvc",     title: "MVC Calibration", sub: "3 max contractions" },
@@ -100,19 +100,13 @@ function panelSetup() {
   const setup = (status && status.setup) || {};
   return `
   <div class="card"><div class="hd"><div class="num">0</div>
-    <div><h2>Device Setup</h2><p>One-time configuration of the contraction target and load-cell calibration.</p></div></div>
+    <div><h2>Device Setup</h2><p>Set the target contraction level for this session.</p></div></div>
     <div class="bd">
-      <div class="grid2">
-        <div class="field"><label>Target % of MVC</label>
-          <input id="targetPct" type="number" min="1" max="100" step="1" value="${setup.target_percentage ?? 20}" /></div>
-        <div class="field"><label>Load-cell calibration factor (optional, N/ADC)</label>
-          <input id="calFactor" type="number" step="any" placeholder="leave blank if device sends Newtons"
-            value="${setup.load_cell_calibration_factor ?? ""}" /></div>
-      </div>
+      <div class="field" style="max-width:200px"><label>Target % of MVC</label>
+        <input id="targetPct" type="number" min="1" max="100" step="1" value="${setup.target_percentage ?? 20}" /></div>
       <div class="btn-row">
         <button class="btn" onclick="saveSetup()">Save setup</button>
       </div>
-      <p class="hint">The ESP32 streams force already in Newtons, so the calibration factor above is metadata only.</p>
 
       <hr style="border:none;border-top:1px solid var(--line);margin:18px 0" />
       <h3 style="margin:0 0 12px;font-size:15px">Zero the load cell</h3>
@@ -175,7 +169,7 @@ function panelMvc() {
 
   let attemptsTable = "";
   if (done) {
-    attemptsTable = `<table style="margin-top:12px"><thead><tr><th>#</th><th class="num">Peak force (N)</th><th class="num">Peak EMG RMS</th><th class="num">Duration (s)</th></tr></thead><tbody>
+    attemptsTable = `<table style="margin-top:12px"><thead><tr><th>#</th><th class="num">Mean force (N)</th><th class="num">Mean EMG RMS</th><th class="num">Duration (s)</th></tr></thead><tbody>
       ${session.mvc_attempts.map(a => `<tr><td>${a.attempt}</td><td class="num">${fnum(a.mvc_force)}</td><td class="num">${fnum(a.mvc_emg,1)}</td><td class="num">${fnum(a.duration_seconds,1)}</td></tr>`).join("")}
     </tbody></table>`;
   }
@@ -194,8 +188,10 @@ function panelMvc() {
         ${recording
           ? '<button class="btn danger" onclick="finishMvc()">Finish attempt (stop pinching)</button> <span class="pill bad">● recording…</span>'
           : `<button class="btn" onclick="startMvc()" ${ready ? "disabled" : ""}>${resting ? "Start next MVC" : "Start MVC attempt"}</button>`}
-        ${resting && rest > 0 ? `<span class="pill warn">rest ${Math.ceil(rest)}s remaining</span>` : ""}
+        ${resting && rest > 0 ? `<span class="pill warn">rest ${Math.ceil(rest)}s remaining</span>
+          <button class="btn ghost" onclick="skipMvcRest()">Skip rest</button>` : ""}
         ${ready ? '<span class="pill good">✓ MVC complete</span>' : ""}
+        ${(done > 0 || recording) ? '<button class="btn danger" onclick="restartMvc()">↻ Restart MVC</button>' : ""}
       </div>
       <p class="hint">Ask the patient to pinch the post as hard as possible. Recording auto-stops at ${fnum(session.mvc_max_seconds || 10,0)} s; you can finish earlier after 3 s.</p>
       ${recording ? `
@@ -253,7 +249,12 @@ function panelResult() {
       <div class="bd"><p class="muted">No result yet. Complete a trial to compute NME.</p></div></div>` + historyCard();
   }
   const r = session.result;
-  const arrow = r.trend === "up" ? "↑" : r.trend === "down" ? "↓" : "→";
+  const arrow = r.trend === "up" ? "↑" : r.trend === "down" ? "↓" : r.trend === "stable" ? "→" : "";
+  const trendLabel = r.trend === "up" ? "Improving" : r.trend === "down" ? "Declining" : r.trend === "stable" ? "Stable" : "First session";
+  const trendNote  = r.trend === "up"     ? "Better efficiency than last session"
+                   : r.trend === "down"   ? "Lower efficiency than last session"
+                   : r.trend === "stable" ? "Similar efficiency to last session"
+                   : "No previous session to compare";
   const warn = (r.emg_clipped && (r.warnings || []).length)
     ? `<div style="margin-bottom:16px;padding:12px 14px;border-radius:10px;background:rgba(248,113,113,.12);border:1px solid var(--bad);color:var(--bad);font-size:13px">
          <b>⚠ EMG clipped — this NME is unreliable.</b><ul style="margin:6px 0 0 18px;padding:0">
@@ -266,8 +267,8 @@ function panelResult() {
       ${warn}
       <div class="btn-row" style="margin-bottom:16px"><button class="btn ghost" onclick="downloadReport('${(r.patient_id || '').replace(/['\\]/g, '\\$&')}')">⬇ Download PDF report${r.patient_id ? ` · ${r.patient_id}` : " · unassigned"}</button></div>
       <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-        <div class="stat hero" style="min-width:160px"><div class="v" style="font-size:40px;color:var(--accent)">${fnum(r.nme,3)}</div><div class="k">NME</div></div>
-        <div class="trend ${r.trend}">${arrow}<div class="k" style="font-size:12px;color:var(--muted)">${r.trend}</div></div>
+        <div class="stat hero" style="min-width:160px"><div class="v" style="font-size:40px;color:var(--accent)">${fnum(r.nme,3)}</div><div class="k">NME <span style="font-weight:normal;font-size:10px;color:var(--muted)">(higher = better)</span></div></div>
+        <div class="trend ${r.trend}">${arrow}<div class="k" style="font-size:13px">${trendLabel}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${trendNote}</div></div>
       </div>
       <div class="grid3" style="margin-top:18px">
         <div class="stat"><div class="v">${fnum(r.percent_mvc_force,1)}%</div><div class="k">%MVC force</div></div>
@@ -295,19 +296,40 @@ function renderHistoryTable() {
   const el = document.getElementById("historyBody");
   if (!el) return;
   if (!historyCache.length) { el.innerHTML = '<p class="muted">No saved sessions yet.</p>'; return; }
-  const rows = historyCache.slice().reverse().map(s => {
-    const arrow = s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→";
-    return `<tr><td>${fmtTime(s.timestamp)}</td><td>${s.patient_id || "—"}</td>
+
+  // Assign per-patient session numbers (historyCache is oldest-first from storage).
+  const patientCount = {};
+  const numbered = historyCache.map(s => {
+    const pid = s.patient_id || "";
+    patientCount[pid] = (patientCount[pid] || 0) + 1;
+    return Object.assign({}, s, { sessionNum: patientCount[pid] });
+  });
+
+  const rows = numbered.slice().reverse().map(s => {
+    // Session 1 is always the baseline (no prior session), even if older saved
+    // data stored its trend as "stable".
+    const isBaseline = s.sessionNum === 1;
+    const arrow = isBaseline ? "" : s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→";
+    const progressLabel = isBaseline ? "First session"
+      : s.trend === "up" ? "Improving" : s.trend === "down" ? "Declining" : "Stable";
+    const progressColor = (!isBaseline && s.trend === "up") ? "color:var(--accent)"
+      : (!isBaseline && s.trend === "down") ? "color:var(--bad)" : "color:var(--muted)";
+    return `<tr>
+      <td>Session ${s.sessionNum}</td>
+      <td>${fmtTime(s.timestamp)}</td><td>${s.patient_id || "—"}</td>
       <td class="num">${fnum(s.nme,3)}</td><td class="num">${fnum(s.percent_mvc_force,1)}%</td>
-      <td class="num">${fnum(s.percent_mvc_emg,1)}%</td><td>${arrow} ${s.trend || ""}</td></tr>`;
+      <td class="num">${fnum(s.percent_mvc_emg,1)}%</td>
+      <td style="${progressColor}">${(arrow + " " + progressLabel).trim()}</td></tr>`;
   }).join("");
+
   // One report button per distinct patient present in the saved history.
   const patients = [...new Set(historyCache.map(s => s.patient_id || ""))];
   const reportBtns = patients.map(pid =>
     `<button class="btn ghost" onclick="downloadReport('${pid.replace(/['\\]/g, '\\$&')}')">⬇ ${pid || "unassigned"}</button>`
   ).join("");
   el.innerHTML = `<div class="btn-row" style="margin-bottom:12px"><span class="muted" style="align-self:center">PDF report:</span>${reportBtns}</div>
-    <table><thead><tr><th>When</th><th>Patient</th><th class="num">NME</th><th class="num">%F</th><th class="num">%EMG</th><th>Trend</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table><thead><tr><th>Session</th><th>When</th><th>Patient</th><th class="num">NME</th><th class="num">%F</th><th class="num">%EMG</th><th>Progress</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="hint" style="margin-top:8px">Progress is relative to each patient's own previous session — no population norm is established for thenar NME.</p>`;
 }
 
 /* helpers */
@@ -317,7 +339,64 @@ function blocked(msg, goto) {
     <div class="btn-row"><button class="btn ghost" onclick="goStep('${goto}')">Go to ${goto}</button></div></div></div>`;
 }
 function goStep(id) { activeStep = id; render(); }
+function currentWorkflowStep() { return (status && status.phase) ? phaseToStep(status.phase) : "setup"; }
 function fmtTime(iso) { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString(); }
+
+/* ---------------- About / reference panel (outside the measurement workflow) ---------------- */
+function panelAbout() {
+  const h3 = "margin:18px 0 6px;font-size:15px";
+  return `
+  <div class="card"><div class="hd"><div class="num">ℹ</div>
+    <div><h2>About Neuromuscular Efficiency (NME)</h2><p>Background, method, and references for this measurement.</p></div></div>
+    <div class="bd">
+
+      <h3 style="margin:2px 0 6px;font-size:15px">What NME measures</h3>
+      <p>Neuromuscular Efficiency (NME) describes how effectively a muscle converts its electrical activation into mechanical force. A muscle that produces more force for the same amount of electrical activity is working more efficiently — a hallmark of healthy motor control and a common target of rehabilitation.</p>
+
+      <div style="margin:14px 0;padding:14px 16px;border-radius:10px;background:rgba(45,212,191,.10);border:1px solid var(--accent);text-align:center">
+        <div style="font-size:18px;color:var(--accent);font-weight:700">NME = %MVC force ÷ %MVC EMG</div>
+      </div>
+
+      <h3 style="${h3}">Why normalise to MVC?</h3>
+      <p>Raw force (newtons) and raw EMG (ADC counts) can't be compared directly — EMG amplitude depends on electrode placement, skin condition, and amplifier gain, all of which change between sessions. So at the start of every session the patient performs maximal contractions (MVC), and both the trial force and trial EMG are expressed as a percentage of that session's own maximum. This normalisation is what makes NME comparable across sessions, electrodes, and patients.</p>
+
+      <h3 style="${h3}">The physiology</h3>
+      <p>Surface EMG reflects the recruitment and firing of motor units — the muscle's electrical "command". Force is the mechanical result of that command. The relationship between the two reflects neuromuscular function: efficiency tends to improve with motor learning, muscle adaptation, and reinnervation after nerve injury, and to worsen with fatigue, denervation, or disuse.</p>
+
+      <h3 style="${h3}">How to read the number</h3>
+      <ul style="margin:0;padding-left:18px;line-height:1.7">
+        <li><b>Higher NME = better</b> — more force produced per unit of electrical activity.</li>
+        <li>Tracked <b>over sessions</b> to monitor recovery; progress is judged against the patient's own previous session, not an absolute scale.</li>
+        <li><b>No population "normal" value exists</b> for thumb (thenar / abductor pollicis brevis) NME — interpret trends within a patient. Reference values for a population must come from a dedicated trial.</li>
+      </ul>
+
+      <h3 style="${h3}">How this device measures it</h3>
+      <ol style="margin:0;padding-left:18px;line-height:1.7">
+        <li><b>MVC calibration</b> — 3 maximal contractions; the best of the three sets the session's force and EMG maxima.</li>
+        <li><b>Submaximal trial</b> — the patient holds a target (default 20% of MVC force) within ±10% for 3 continuous seconds.</li>
+        <li><b>Signal processing</b> — force is low-pass filtered (10 Hz); EMG is notch-filtered (60 Hz), baseline-subtracted, then RMS-averaged over 0.5 s windows.</li>
+        <li><b>Computation</b> — %MVC force and %MVC EMG are divided to give NME.</li>
+      </ol>
+
+      <h3 style="${h3}">Primary reference</h3>
+      <p style="font-size:13px;margin:0 0 6px"><b>Rainoldi A, Gazzoni M, Casale R.</b> Surface EMG signal alterations in Carpal Tunnel syndrome: a pilot study. <i>Eur J Appl Physiol</i>. 2008;103(2):233–242. doi:10.1007/s00421-008-0694-x</p>
+      <p class="hint" style="margin-top:0">This device is grounded in the neuromuscular-efficiency measure from this study. Recording the flexor and abductor pollicis brevis at submaximal levels (10–30% MVC), the authors found that patients with carpal tunnel syndrome show <b>lower neuromuscular efficiency</b> — together with lower signal amplitude, conduction velocity, and spectral frequency — than healthy controls, consistent with a selective loss of fast (type II) motor units.</p>
+
+      <h3 style="${h3}">Related work &amp; further reading</h3>
+      <ol style="font-size:12px;color:var(--muted);line-height:1.65;margin:0;padding-left:18px">
+        <li>Bonfiglioli R, Botter A, Calabrese M, Mussoni P, Violante FS, Merletti R. Surface electromyography features in manual workers affected by carpal tunnel syndrome. <i>Muscle Nerve</i>. 2012;45(6):873–882. doi:10.1002/mus.23258 <span style="color:var(--accent)">(reports NME of the abductor pollicis brevis at 20% and 50% MVC in workers with CTS)</span></li>
+        <li>Arabadzhiev TI, Dimitrov VG, Dimitrova NA, Dimitrov GV. Interpretation of EMG integral or RMS and estimates of 'neuromuscular efficiency' can be misleading in fatiguing contraction. <i>J Electromyogr Kinesiol</i>. 2010;20(2):223–232. doi:10.1016/j.jelekin.2009.01.008</li>
+        <li>Lawrence JH, De Luca CJ. Myoelectric signal versus force relationship in different human muscles. <i>J Appl Physiol</i>. 1983;54(6):1653–1659.</li>
+        <li>De Luca CJ. The use of surface electromyography in biomechanics. <i>J Appl Biomech</i>. 1997;13(2):135–163.</li>
+        <li>Hermens HJ, Freriks B, Disselhorst-Klug C, Rau G. Development of recommendations for SEMG sensors and sensor placement procedures (SENIAM). <i>J Electromyogr Kinesiol</i>. 2000;10(5):361–374.</li>
+        <li>Merletti R, Parker PA. <i>Electromyography: Physiology, Engineering, and Noninvasive Applications.</i> Hoboken, NJ: Wiley-IEEE Press; 2004.</li>
+      </ol>
+      <p class="hint">Verify citation details against the original sources before using them in formal work.</p>
+
+      <div class="btn-row" style="margin-top:8px"><button class="btn ghost" onclick="goStep(currentWorkflowStep())">← Back to workflow</button></div>
+    </div>
+  </div>`;
+}
 
 /* ---------------- Render ----------------
    render() rebuilds the content pane via innerHTML, which destroys any
@@ -352,6 +431,7 @@ function render() {
     case "mvc": html = panelMvc(); break;
     case "trial": html = panelTrial(); break;
     case "result": html = panelResult(); break;
+    case "about": html = panelAbout(); break;
   }
   c.innerHTML = html;
   lastRenderSig = viewSignature();
@@ -362,8 +442,7 @@ function render() {
 async function saveSetup() {
   try {
     const pct = parseFloat(document.getElementById("targetPct").value);
-    const calRaw = document.getElementById("calFactor").value.trim();
-    const body = { target_percentage: pct, load_cell_calibration_factor: calRaw === "" ? null : parseFloat(calRaw) };
+    const body = { target_percentage: pct };
     await api("/setup", "POST", body);
     toast("Setup saved.", "ok");
     await refreshStatus();
@@ -372,10 +451,132 @@ async function saveSetup() {
 async function tareLoadCell() {
   try {
     await api("/setup/tare", "POST");
-    const out = document.getElementById("tareOut");
-    if (out) out.textContent = "Tare sent — keep the load cell unloaded.";
+    const msg = "Tare sent — keep the load cell unloaded.";
+    ["tareOut", "tareStatus"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = msg; });
     toast("Tare command sent to device.", "ok");
   } catch (e) { fail(e); }
+}
+
+/* ---------------- Auto-playing demo (for presentations) ----------------
+   Drives the real API end-to-end with synthetic samples, so the GUI walks
+   itself from Setup through Result exactly like a live session. A backend
+   "demo mode" flag makes the serial reader ignore the real device meanwhile,
+   so it works whether or not the ESP32 is plugged in. */
+let demoRunning = false;
+const _sleep = ms => new Promise(r => setTimeout(r, ms));
+const _jit = (base, amp) => base + (Math.random() - 0.5) * amp;
+
+async function _demoFeed(forceFn, emgFn, durationMs, stepMs = 90) {
+  const t0 = Date.now();
+  while (demoRunning && Date.now() - t0 < durationMs) {
+    try { await api("/data", "POST", { force: forceFn(), emg: emgFn() }); } catch {}
+    await _sleep(stepMs);
+  }
+}
+
+// One realistic maximal thumb pinch: a quick rise (~0.65 s), tremor during the
+// hold, and a slight fatigue droop — not a flat line. The backend takes the MEAN
+// over the hold as the MVC value.
+async function _demoPinch(peakForce, peakEmg, durationMs) {
+  const t0 = Date.now();
+  while (demoRunning && Date.now() - t0 < durationMs) {
+    const elapsed = Date.now() - t0;
+    const t = elapsed / durationMs;
+    const ramp = Math.min(1, elapsed / 900);                   // rise to peak (visible)
+    const fatigue = t < 0.2 ? 1 : 1 - 0.14 * (t - 0.2) / 0.8;  // gentle decline
+    const tremor = 1 + 0.035 * Math.sin(elapsed / 110) + (Math.random() - 0.5) * 0.05;
+    const env = ramp * fatigue * tremor;
+    try {
+      await api("/data", "POST", {
+        force: Math.max(0, peakForce * env),
+        emg: Math.max(0, peakEmg * env * (1 + (Math.random() - 0.5) * 0.10)),
+      });
+    } catch {}
+    await _sleep(70);
+  }
+}
+
+async function runDemo() {
+  if (demoRunning) return;
+  demoRunning = true;
+  const btn = document.getElementById("demoBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "● Demo running…"; }
+  try {
+    await api("/demo/start", "POST", {});            // suppress real device samples
+
+    toast("Demo: configuring device (target 20% MVC)…", "ok");
+    await api("/setup", "POST", { target_percentage: 20 });
+    activeStep = "setup"; await refreshStatus(); render(); await _sleep(2200);
+
+    toast("Demo: starting session for patient DEMO…", "ok");
+    await api("/session/start", "POST", { patient_id: "DEMO" });
+    activeStep = "session"; await refreshStatus(); render(); await _sleep(2200);
+
+    toast("Demo: completing preparation checklist…", "ok");
+    await api("/session/prepare", "POST", {
+      skin_cleaned: true, electrode_on_apb: true, skin_marked: true,
+      hand_positioned: true, notes: "Automated demonstration run",
+    });
+    activeStep = "prep"; await refreshStatus(); render(); await _sleep(2200);
+
+    // Resting hand: force ~0 with small sensor noise, low resting EMG — this
+    // establishes the EMG baseline floor the backend subtracts, like the idle
+    // periods in a real session.
+    const _rest = ms => _demoFeed(() => _jit(0.0, 0.12), () => _jit(120, 30), ms);
+
+    // MVC: three maximal palmar pinches. Real efforts differ attempt to attempt,
+    // so the peaks vary (~2.7–3.0 N — a believable weak palmar-pinch maximum).
+    const peakForce = [2.7, 3.0, 2.85];
+    const peakEmg = [1500, 1650, 1580];   // raw MyoWare envelope, below saturation
+    activeStep = "mvc"; render();
+    await _rest(3000);                                 // settle the baseline first
+    for (let n = 1; n <= 3 && demoRunning; n++) {
+      toast(`Demo: MVC attempt ${n} of 3 — pinch as hard as you can`, "ok");
+      await api("/mvc/start", "POST", {});
+      mvcStartClient = Date.now();                    // animate the recording countdown
+      await refreshStatus(); render();
+      await _demoPinch(peakForce[n - 1], peakEmg[n - 1], 4500);
+      await api("/mvc/finish", "POST", {});
+      mvcStartClient = null;
+      await refreshStatus(); render();
+      if (n < 3) { try { await api("/mvc/skip-rest", "POST", {}); } catch {} await refreshStatus(); render(); }
+      toast("Demo: resting between contractions…", "");
+      await _rest(2800);                               // rest (also keeps the baseline low)
+    }
+    await _sleep(1500);
+
+    // 20% MVC trial: gently ramp into the target band, then hold with small tremor
+    // until the backend auto-completes the 3 s stable hold.
+    toast("Demo: 20% MVC trial — holding steady in the target band…", "ok");
+    await api("/trial/start", "POST", {});
+    activeStep = "trial"; await refreshStatus(); render();
+    const target = (session && session.target_force) || 0.5;
+    const tStart = Date.now(), tEnd = tStart + 14000;
+    let completed = false;
+    while (demoRunning && Date.now() < tEnd && !completed) {
+      const elapsed = Date.now() - tStart;
+      const ramp = Math.min(1, elapsed / 1200);                // slow ease into the band
+      const tremor = 1 + 0.025 * Math.sin(elapsed / 200) + (Math.random() - 0.5) * 0.025;
+      try {
+        await api("/data", "POST", {
+          force: target * ramp * tremor,
+          emg: (180 + 320 * ramp) * (1 + (Math.random() - 0.5) * 0.12),
+        });
+      } catch {}
+      await _sleep(80);
+      try { completed = (await api("/trial/status")).trial_completed; } catch {}
+    }
+    await refreshStatus();
+    await _sleep(600);
+    activeStep = "result"; render(); loadHistory();
+    toast(completed ? "Demo complete — NME result ready." : "Demo finished.", completed ? "ok" : "");
+  } catch (e) {
+    fail(e);
+  } finally {
+    try { await api("/demo/stop", "POST", {}); } catch {}
+    demoRunning = false;
+    if (btn) { btn.disabled = false; btn.textContent = "▶ Run demo"; }
+  }
 }
 async function startSession() {
   try {
@@ -409,6 +610,11 @@ let mvcStartClient = null;     // client-side hold start, for a smooth countdown
 let mvcAutoFinishing = false;
 async function startMvc() { try { await api("/mvc/start", "POST", {}); mvcStartClient = Date.now(); toast("MVC recording — pinch hard!", "ok"); await refreshStatus(); } catch (e) { fail(e); } }
 async function finishMvc() { try { const r = await api("/mvc/finish", "POST", {}); toast("Attempt recorded.", "ok"); session = r; await refreshStatus(); } catch (e) { fail(e); } finally { mvcStartClient = null; } }
+async function skipMvcRest() { try { const r = await api("/mvc/skip-rest", "POST", {}); toast("Rest skipped — ready for next MVC.", "ok"); session = r; await refreshStatus(); } catch (e) { fail(e); } }
+async function restartMvc() {
+  if (!confirm("Discard all MVC attempts and start the calibration over? Saved session results are kept.")) return;
+  try { const r = await api("/mvc/restart", "POST", {}); mvcStartClient = null; toast("MVC calibration reset — record attempt 1.", "ok"); session = r; await refreshStatus(); } catch (e) { fail(e); }
+}
 
 /* Drive the MVC countdown + auto-stop at the 10 s limit (fast tick, no full re-render). */
 function pollMvc() {
@@ -656,7 +862,8 @@ async function pollDataFallback() {
 /* detect phase transitions to auto-follow once */
 setInterval(() => {
   if (status && status.phase !== lastPhase) {
-    if (lastPhase !== null) {
+    // Don't auto-advance away from the (non-workflow) About panel while reading.
+    if (lastPhase !== null && activeStep !== "about") {
       const target = phaseToStep(status.phase);
       // Don't auto-jump into the trial after MVC calibration finishes: stay on
       // the MVC step so the user reviews the result and starts the trial

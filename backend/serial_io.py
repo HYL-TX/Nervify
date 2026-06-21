@@ -150,6 +150,11 @@ def serial_is_live() -> bool:
 
 def process_serial_line(line: str) -> None:
     record_raw_serial_line(line)
+    # During a presentation demo, ignore real device samples so the synthetic
+    # demo signal isn't disturbed by the resting device (which would, e.g., break
+    # the trial's continuous in-band hold detection).
+    if state.demo_active:
+        return
     payload = parse_serial_line(line)
     if payload is None:
         reject_serial_line("Could not find force/emg values.")
@@ -163,6 +168,31 @@ def process_serial_line(line: str) -> None:
 
     session.add_sample(force, emg, payload)
     accept_serial_sample()
+
+
+def _find_serial_port() -> str | None:
+    """Return the port to open: explicit env-var override, then auto-detect.
+
+    Auto-detection scans connected USB-serial devices and prefers ones whose
+    description or manufacturer matches common ESP32 USB bridge chips (CP210x,
+    CH340, CH341, FTDI). Falls back to the first available port if none match.
+    """
+    if config.SERIAL_PORT:
+        return config.SERIAL_PORT
+    try:
+        from serial.tools import list_ports  # type: ignore[import]
+
+        ports = list_ports.comports()
+        keywords = ("esp32", "cp210", "ch340", "ch341", "ftdi", "silicon labs", "usb serial", "uart")
+        for port in ports:
+            desc = ((port.description or "") + " " + (port.manufacturer or "")).lower()
+            if any(kw in desc for kw in keywords):
+                return port.device
+        if ports:
+            return ports[0].device
+    except Exception:
+        pass
+    return None
 
 
 def serial_reader() -> None:
@@ -181,12 +211,23 @@ def serial_reader() -> None:
 
     while True:
         if ser is None or not ser.is_open:
+            port = _find_serial_port()
+            if port is None:
+                with state.lock:
+                    state.serial_status.update(
+                        {
+                            "connected": False,
+                            "last_error": "No serial device found. Plug in the ESP32 and wait.",
+                        }
+                    )
+                time.sleep(2)
+                continue
             try:
                 # NOTE: leave DTR asserted (pyserial's default). This board uses
                 # the ESP32 native USB-CDC, which only transmits while the host
                 # holds DTR high -- forcing DTR low here makes Serial.print on
                 # the device a silent no-op and no samples ever arrive.
-                ser = serial.Serial(config.SERIAL_PORT, config.BAUD_RATE, timeout=1)
+                ser = serial.Serial(port, config.BAUD_RATE, timeout=1)
             except Exception as exc:
                 with state.lock:
                     state.serial_status.update(
@@ -204,6 +245,7 @@ def serial_reader() -> None:
                 state.serial_status.update(
                     {
                         "connected": True,
+                        "port": port,
                         "last_error": None,
                         "last_connected_at": iso_now(),
                     }

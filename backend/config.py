@@ -14,8 +14,9 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 DATA_DIR = BASE_DIR / "data"
 SESSION_LOG_PATH = DATA_DIR / "sessions.json"
 
-# Override without editing source: NERVIFY_SERIAL_PORT=/dev/cu.usbmodemXXXX uvicorn backend.main:app
-SERIAL_PORT = os.environ.get("NERVIFY_SERIAL_PORT", "/dev/cu.usbmodem14101")
+# Override without editing source: NERVIFY_SERIAL_PORT=COM3 uvicorn backend.main:app
+# When unset, the backend auto-detects the first USB-serial device (ESP32, CP210x, CH340, etc.).
+SERIAL_PORT = os.environ.get("NERVIFY_SERIAL_PORT")  # None = auto-detect
 BAUD_RATE = 115200
 TARGET_PERCENTAGE = 20.0
 TARGET_TOLERANCE = 0.10

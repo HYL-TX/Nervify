@@ -34,6 +34,51 @@ def start_mvc_capture() -> dict[str, Any]:
         return session.serialize_session(current)
 
 
+@router.post("/mvc/restart")
+def restart_mvc() -> dict[str, Any]:
+    """Discard all MVC attempts and the derived baseline so they can be re-taken.
+
+    Used when a calibration looks wrong (e.g. a weak hold, a force spike, or a
+    clipped EMG attempt that inflates the baseline). Clears the downstream trial
+    state too, since the target force is derived from the MVC and is now stale.
+    Already-saved session results in history are untouched.
+    """
+
+    current = session.ensure_session()
+    with state.lock:
+        session.ensure_prepared(current)
+        current.mvc_attempts = []
+        current.mvc_force = None
+        current.mvc_emg = None
+        current.target_force = None
+        current.capture_started_at = None
+        current.next_mvc_allowed_at = None
+        current.stable_started_at = None
+        current.trial_completed = False
+        current.result = None
+        current.phase = "ready_for_mvc"
+        return session.serialize_session(current)
+
+
+@router.post("/mvc/skip-rest")
+def skip_mvc_rest() -> dict[str, Any]:
+    """Clear the enforced 60 s rest so the next MVC can start immediately.
+
+    The rest period guards against fatigue biasing the MVC baseline, so this is a
+    manual override for the operator -- only valid while actually resting.
+    """
+
+    current = session.ensure_session()
+    with state.lock:
+        if current.phase != "mvc_rest":
+            raise HTTPException(
+                status_code=400, detail="No MVC rest is in progress to skip."
+            )
+        current.next_mvc_allowed_at = None
+        current.phase = "ready_for_mvc"
+        return session.serialize_session(current)
+
+
 @router.post("/mvc/finish")
 def finish_mvc_capture() -> dict[str, Any]:
     current = session.ensure_session()
