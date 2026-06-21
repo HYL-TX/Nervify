@@ -30,14 +30,23 @@ pins the exact versions used during development — install from it
 
 API docs (interactive Swagger): <http://127.0.0.1:8000/docs>
 
-**Plug in the ESP32 first** so the serial reader connects on startup. Default
-port is `/dev/cu.usbmodem14101`; override it without editing source:
+**Plug in the ESP32 first** so the serial reader connects on startup. The backend
+**auto-detects** the USB-serial port (ESP32 / CP210x / CH340 / FTDI), so no
+configuration is normally needed. To force a specific port, set
+`NERVIFY_SERIAL_PORT` before launching:
 
 ```bash
+# Windows (PowerShell)
+$env:NERVIFY_SERIAL_PORT="COM7"; uvicorn backend.main:app --reload
+
+# macOS / Linux
 NERVIFY_SERIAL_PORT=/dev/cu.usbmodemXXXX uvicorn backend.main:app --reload
 ```
 
-To find your port: `ls /dev/cu.usbmodem*` (macOS) or `ls /dev/ttyUSB* /dev/ttyACM*` (Linux).
+Find your port in **Device Manager → "Ports (COM & LPT)"** (Windows), or with
+`ls /dev/cu.usbmodem*` (macOS) / `ls /dev/ttyUSB* /dev/ttyACM*` (Linux). If you
+hit an "Access is denied" / port-busy error, close any other program holding the
+port (Arduino Serial Monitor, another running server instance).
 
 This is a single-process app: the backend serves the frontend itself (`/ui` plus
 `/static/*`), so there is **no separate frontend server and no build step**.
@@ -47,13 +56,15 @@ This is a single-process app: the backend serves the frontend itself (`/ui` plus
 ## Using the UI — measurement workflow
 
 The UI walks you left-to-right through six steps. The sidebar shows a live
-force/EMG signal and the device connection state (green = ESP32 streaming,
-amber = backend up but no device).
+force/EMG signal, the device connection state (green = ESP32 streaming,
+amber = backend up but no device), and quick actions: **Tare load cell**,
+**ℹ About NME** (an explainer with references), and **▶ Run demo** (an
+auto-playing session for presentations — see [Demo mode](#demo-mode)).
 
 1. **Device Setup** — set the target contraction level (default **20% MVC**).
-   Force arrives from the ESP32 already in Newtons, so the load-cell calibration
-   factor is optional metadata. A **Tare load cell** button re-zeros the cell on
-   the device (keep it unloaded) if its resting force drifts.
+   Force arrives from the ESP32 already in Newtons. A **Tare load cell** button
+   (in Device Setup and in the sidebar) re-zeros the cell on the device — keep it
+   unloaded — if its resting force drifts.
 2. **Session** — enter a **Patient ID** and start a session. *Use a consistent
    ID per patient* — reports and the recovery trend group by exact-match
    `patient_id`.
@@ -69,23 +80,39 @@ amber = backend up but no device).
    target band (±10%) for **3 continuous seconds**. The gauge shows live force vs.
    the band; the trial auto-completes when the hold is stable. (*Force-finish from
    last 3 s* is available as a manual fallback.)
-6. **Result** — shows the computed **NME**, the recovery trend (↑/↓/→ vs. this
-   patient's previous session), and the underlying values. Below it, **Session
-   History** lists every saved session and offers PDF report downloads.
+6. **Result** — shows the computed **NME** (higher = better), plain-language
+   **progress** vs. the patient's previous session (**Improving / Declining /
+   Stable**, or *First session* for a baseline), and the underlying values. Below
+   it, **Session History** lists every saved session — numbered per patient — and
+   offers PDF report downloads.
 
 ### PDF reports
 
 - On the **Result** panel: *⬇ Download PDF report* for the current patient.
 - In **Session History**: one report button per distinct patient in the log.
 
-Each report contains a summary (latest NME, trend, session count, date range), an
-**NME-over-sessions chart**, a per-session table, EMG-clipped sessions flagged in
-red, and a short explanation of NME so it stands alone. Reports are filtered by
-exact `patient_id` (sessions with no ID form the "unassigned" report).
+Each report is a self-contained clinical document: a branded header/footer with
+page numbers, a patient-information strip, a key-results card, an
+**NME-over-sessions chart**, a per-session table (EMG-clipped sessions flagged in
+red), and **Clinical Interpretation**, **Measurement Method**, and
+**References** sections (primary reference: Rainoldi et al., 2008). It renders in
+the Aptos typeface when available and falls back to Helvetica otherwise. Reports
+are filtered by exact `patient_id` (sessions with no ID form the "unassigned"
+report).
 
 > ⚠ **EMG clipping.** If the MyoWare envelope saturates the ADC, MVC EMG is
 > capped and the resulting NME is understated. The UI and the report flag these
 > sessions; lower the MyoWare gain and re-record.
+
+### Demo mode
+
+The **▶ Run demo** button (sidebar) plays a full session automatically — setup,
+MVC calibration, the 20% trial, and the result — using realistic synthetic
+palmar-pinch signals (~0–3 N). It's meant for presentations and works with or
+without the ESP32 connected: while the demo runs, the backend ignores the real
+device so the synthetic signal isn't disturbed. Demo sessions are saved under
+patient **DEMO** — delete those entries from `data/sessions.json` if you don't
+want them.
 
 ---
 
@@ -126,11 +153,12 @@ tests/                test_serial.py (raw serial sniffer)
 | `GET /data` · `GET /stream` | Latest force/EMG (poll) · live SSE feed (~20 Hz) |
 | `POST /data` | Inject a manual `{force, emg}` sample (testing) |
 | `GET /serial/raw` | Raw serial lines + parse diagnostics |
-| `GET·POST /setup` | Read / set target % and calibration |
+| `GET·POST /setup` | Read / set target % of MVC |
 | `POST /setup/tare` | Tell the device to re-zero (tare) the load cell |
+| `POST /demo/start` · `/demo/stop` | Enter / leave presentation demo mode (serial reader ignores the real device) |
 | `GET /workflow` | Step-by-step completion overview |
 | `POST /session/start` · `/session/prepare` · `/session/reset` | Session lifecycle |
-| `POST /mvc/start` · `/mvc/finish` | MVC capture (×3) |
+| `POST /mvc/start` · `/mvc/finish` · `/mvc/skip-rest` · `/mvc/restart` | MVC capture (×3); skip the 60 s rest lock; restart calibration |
 | `POST /trial/start` · `GET /trial/status` · `POST /trial/finish` | Trial monitoring |
 | `GET /session` · `GET /sessions` | Current session · all saved sessions |
 | `GET /result/latest` | Most recent saved result |
@@ -159,10 +187,13 @@ The backend tolerates minor framing glitches but rejects unparseable lines
 ## Troubleshooting
 
 **`connected: false` or "no device" in the UI**
-1. Close the Arduino Serial Monitor and stop `tests/test_serial.py` — only one
-   process can hold the serial port.
-2. Confirm the port: `ls /dev/cu.usbmodem*`, and set `NERVIFY_SERIAL_PORT` if it
-   differs from the default.
+1. Close anything else holding the port — Arduino Serial Monitor, the VS Code
+   Serial Monitor, `tests/test_serial.py`, or a second server instance. Only one
+   process can hold a serial port (an `Access is denied` / `PermissionError` in
+   `GET /serial/raw` means the port is busy).
+2. The port is auto-detected; if the wrong device is picked, set
+   `NERVIFY_SERIAL_PORT` (e.g. `COM7`, or `/dev/cu.usbmodemXXXX`). Check the
+   detected port and any error under `serial` in `GET /serial/raw`.
 3. Unplug/replug the ESP32, then restart the server.
 
 The UI reports connection by *recent data flow*, not the raw port handle, so a
