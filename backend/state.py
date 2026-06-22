@@ -53,7 +53,6 @@ class SessionState:
     patient_id: Optional[str]
     started_at: str
     target_percentage: float = config.TARGET_PERCENTAGE
-    load_cell_calibration_factor: Optional[float] = None
     preparation: PreparationChecklist = field(default_factory=PreparationChecklist)
     mvc_attempts: list[MvcAttempt] = field(default_factory=list)
     mvc_force: Optional[float] = None
@@ -76,9 +75,12 @@ latest_data: dict[str, Any] = {"force": 0.0, "emg": 0.0}
 # subtracted before RMS so baseline drift doesn't move NME between sessions.
 emg_recent: deque[float] = deque(maxlen=config.EMG_BASELINE_WINDOW_SAMPLES)
 current_session: Optional[SessionState] = None
+# When True, the serial reader ignores real device samples so the presentation
+# demo can drive the pipeline with synthetic samples without interference.
+demo_active: bool = False
 serial_status: dict[str, Any] = {
     "connected": False,
-    "port": config.SERIAL_PORT,
+    "port": config.SERIAL_PORT or "auto",
     "baud_rate": config.BAUD_RATE,
     "last_error": None,
     "last_parse_error": None,
@@ -94,5 +96,4 @@ serial_status: dict[str, Any] = {
 }
 runtime_setup = {
     "target_percentage": config.TARGET_PERCENTAGE,
-    "load_cell_calibration_factor": None,
 }
