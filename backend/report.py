@@ -289,13 +289,13 @@ def build_patient_report(patient_id: Optional[str]) -> Optional[bytes]:
         # Wordmark + running tagline / patient.
         canvas.setFillColor(BRAND)
         canvas.setFont(FB, 12)
-        canvas.drawString(18 * mm, h - 11.5 * mm, "Nervify")
+        canvas.drawString(18 * mm, h - 11.5 * mm, "MyoForce")
         canvas.setFillColor(MUTED)
         canvas.setFont(F, 8)
         canvas.drawString(
-            18 * mm + canvas.stringWidth("Nervify", FB, 12) + 5,
+            18 * mm + canvas.stringWidth("MyoForce", FB, 12) + 5,
             h - 11.5 * mm,
-            "Neuromuscular Efficiency Measurement",
+            "by Nervify · Neuromuscular Efficiency Measurement",
         )
         canvas.drawRightString(w - 18 * mm, h - 11.5 * mm, f"Patient: {label}")
         canvas.setStrokeColor(LINE)
@@ -306,7 +306,7 @@ def build_patient_report(patient_id: Optional[str]) -> Optional[bytes]:
         canvas.setFillColor(MUTED)
         canvas.setFont(F, 7.5)
         canvas.drawString(18 * mm, 10 * mm, "Confidential — for clinical use only")
-        canvas.drawCentredString(w / 2.0, 10 * mm, f"Generated {gen_date} · Nervify")
+        canvas.drawCentredString(w / 2.0, 10 * mm, f"Generated {gen_date} · MyoForce by Nervify")
         canvas.drawRightString(w - 18 * mm, 10 * mm, f"Page {canvas.getPageNumber()}")
         canvas.restoreState()
 
@@ -314,7 +314,7 @@ def build_patient_report(patient_id: Optional[str]) -> Optional[bytes]:
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        title=f"Nervify NME Report — {label}",
+        title=f"MyoForce NME Report — {label}",
         author="Nervify",
         leftMargin=18 * mm,
         rightMargin=18 * mm,
