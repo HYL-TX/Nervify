@@ -536,7 +536,7 @@ async function runDemo() {
     // periods in a real session.
     const _rest = ms => _demoFeed(() => _jit(0.0, 0.12), () => _jit(120, 30), ms);
 
-    // MVC: three maximal palmar pinches. Real efforts differ attempt to attempt.
+    // MVC: three maximal tip pinches. Real efforts differ attempt to attempt.
     // Peaks (~3.0–3.3 N) continue the seeded strength-recovery trend (2.4→3.0 N),
     // so this final session is the strongest yet — recovery magnitude improving.
     const peakForce = [3.0, 3.3, 3.15];

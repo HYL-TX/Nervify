@@ -117,7 +117,7 @@ report).
 
 The **▶ Run demo** button (sidebar) plays a full session automatically — setup,
 MVC calibration, the 20% trial, and the result — using realistic synthetic
-palmar-pinch signals (~0–3 N). So the recovery trend and PDF chart are
+tip-pinch signals (~0–3 N). So the recovery trend and PDF chart are
 meaningful, it first **seeds a short prior history** for patient **DEMO** (three
 back-dated sessions with rising NME `0.62 → 0.71 → 0.83` and rising MVC force
 `2.4 → 3.0 N`), then runs a live final session that lands around **0.95
