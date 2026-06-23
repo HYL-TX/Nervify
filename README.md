@@ -41,11 +41,14 @@ API docs (interactive Swagger): <http://127.0.0.1:8000/docs>
 configuration is normally needed. To force a specific port, set
 `NERVIFY_SERIAL_PORT` before launching:
 
+`COM7` and `/dev/cu.usbmodemXXXX` below are **examples** — replace them with your
+own port (see how to find it just below).
+
 ```bash
-# Windows (PowerShell)
+# Windows (PowerShell) — replace COM7 with your port (COM3, COM5, …)
 $env:NERVIFY_SERIAL_PORT="COM7"; uvicorn backend.main:app --reload
 
-# macOS / Linux
+# macOS / Linux — replace with your actual device path
 NERVIFY_SERIAL_PORT=/dev/cu.usbmodemXXXX uvicorn backend.main:app --reload
 ```
 
