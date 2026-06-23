@@ -169,9 +169,9 @@ function panelMvc() {
 
   let attemptsTable = "";
   if (done) {
-    attemptsTable = `<table style="margin-top:12px"><thead><tr><th>#</th><th class="num">Mean force (N)</th><th class="num">Mean EMG RMS</th><th class="num">Duration (s)</th></tr></thead><tbody>
+    attemptsTable = `<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>#</th><th class="num">Mean force (N)</th><th class="num">Mean EMG RMS</th><th class="num">Duration (s)</th></tr></thead><tbody>
       ${session.mvc_attempts.map(a => `<tr><td>${a.attempt}</td><td class="num">${fnum(a.mvc_force)}</td><td class="num">${fnum(a.mvc_emg,1)}</td><td class="num">${fnum(a.duration_seconds,1)}</td></tr>`).join("")}
-    </tbody></table>`;
+    </tbody></table></div>`;
   }
 
   return `
@@ -270,15 +270,13 @@ function panelResult() {
         <div class="nme-ring">
           <svg width="168" height="168" viewBox="0 0 168 168">
             <defs><linearGradient id="nmeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#67e8f9"/><stop offset="55%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#f0abfc"/>
+              <stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#5cc8ff"/><stop offset="100%" stop-color="#3aa9e0"/>
             </linearGradient></defs>
             <circle class="ring-bg" cx="84" cy="84" r="74"></circle>
-            <circle class="ring-f" id="nmeArc" cx="84" cy="84" r="74"></circle>
+            <circle class="ring-f" id="nmeArc" cx="84" cy="84" r="74" transform="rotate(-90 84 84)"></circle>
+            <text id="nmeRingVal" class="ring-num" x="84" y="82" text-anchor="middle" dominant-baseline="middle">${fnum(r.nme,3)}</text>
+            <text class="ring-lbl" x="84" y="108" text-anchor="middle">NME</text>
           </svg>
-          <div class="ring-center">
-            <div class="v" id="nmeRingVal">${fnum(r.nme,3)}</div>
-            <div class="k">NME</div>
-          </div>
         </div>
         <div>
           <div class="trend ${r.trend}"><span class="arrow">${arrow || "•"}</span>
@@ -346,7 +344,7 @@ function renderHistoryTable() {
     `<button class="btn ghost" onclick="downloadReport('${pid.replace(/['\\]/g, '\\$&')}')">⬇ ${pid || "unassigned"}</button>`
   ).join("");
   el.innerHTML = `<div class="btn-row" style="margin-bottom:12px"><span class="muted" style="align-self:center">PDF report:</span>${reportBtns}</div>
-    <table><thead><tr><th>Session</th><th>When</th><th>Patient</th><th class="num">NME</th><th class="num">%F</th><th class="num">%EMG</th><th>Progress</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="tablewrap"><table><thead><tr><th>Session</th><th>When</th><th>Patient</th><th class="num">NME</th><th class="num">%F</th><th class="num">%EMG</th><th>Progress</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="hint" style="margin-top:8px">Progress is relative to each patient's own previous session — no population norm is established for thenar NME.</p>`;
 }
 

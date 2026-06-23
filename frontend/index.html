@@ -4,34 +4,59 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#030711" />
-<title>MYOFORCE // Neural Performance Lab</title>
-<meta name="description" content="MyoForce by Nervify — a neural performance lab for thumb neuromuscular efficiency, from force and EMG." />
+<title>MYOFORCE // by NERVIFY · Neural Performance Lab</title>
+<meta name="description" content="MyoForce by NERVIFY — a neural performance lab measuring thumb neuromuscular efficiency from force and EMG." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/static/styles.css?v=5" />
+<link rel="stylesheet" href="/static/styles.css?v=13" />
 </head>
 <body class="no-scroll">
+
+<!-- NERVIFY brand mark: neuron-in-cross (reused via <use>) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="nervify-mark" viewBox="0 0 100 100">
+    <path fill="currentColor" d="M41 6 L59 6 Q66 6 66 13 L66 27 Q66 34 73 34 L87 34 Q94 34 94 41 L94 59 Q94 66 87 66 L73 66 Q66 66 66 73 L66 87 Q66 94 59 94 L41 94 Q34 94 34 87 L34 73 Q34 66 27 66 L13 66 Q6 66 6 59 L6 41 Q6 34 13 34 L27 34 Q34 34 34 27 L34 13 Q34 6 41 6 Z"/>
+    <g fill="none" stroke="#eaf6ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 43 C49 33 52 26 49 13"/>
+      <path d="M53 45 C62 40 70 36 82 30"/>
+      <path d="M55 50 C66 49 75 50 92 47"/>
+      <path d="M54 55 C63 61 69 66 80 74"/>
+      <path d="M50 57 C51 67 49 75 52 91"/>
+      <path d="M46 55 C37 60 31 65 19 73"/>
+      <path d="M45 50 C34 51 25 50 8 53"/>
+      <path d="M46 45 C38 40 32 35 20 28"/>
+      <path d="M82 30 q4 -3 8 -4"/>
+      <path d="M80 74 q4 3 7 5"/>
+    </g>
+    <circle cx="50" cy="50" r="6.4" fill="#eaf6ff"/>
+  </symbol>
+</svg>
 
 <!-- layered field: static fallback → WebGL → grain -->
 <div id="bg-fallback"></div>
 <canvas id="webgl"></canvas>
 <div id="grain"></div>
 
-<!-- Fixed holographic viewport frame (decorative HMI overlay) -->
+<!-- Fixed holographic viewport frame -->
 <div id="hud-frame" aria-hidden="true">
   <span class="corner tl"></span><span class="corner tr"></span>
   <span class="corner bl"></span><span class="corner br"></span>
-  <div class="hud-edge top">MYOFORCE&nbsp;//&nbsp;NEURAL&nbsp;PERFORMANCE&nbsp;LAB</div>
-  <div class="hud-edge left">NERVIFY · EMG × FORCE</div>
+  <div class="hud-edge top">NERVIFY&nbsp;·&nbsp;MYOFORCE&nbsp;·&nbsp;NEURAL&nbsp;PERFORMANCE&nbsp;LAB</div>
+  <div class="hud-edge left">EMG&nbsp;×&nbsp;FORCE&nbsp;→&nbsp;NME</div>
   <div class="hud-edge right" id="hudClock">--:--:--</div>
-  <div class="hud-reticle"></div>
 </div>
 
 <!-- =================== BOOT / PRELOADER =================== -->
 <div id="preloader">
   <div class="boot">
-    <div class="boot-mark">MYO<b>FORCE</b> <span>v1.0</span></div>
+    <div class="boot-brand">
+      <svg class="boot-logo" viewBox="0 0 100 100"><use href="#nervify-mark"/></svg>
+      <div>
+        <div class="boot-word">NERVIFY</div>
+        <div class="boot-prod">MYOFORCE · NEURAL PERFORMANCE LAB</div>
+      </div>
+    </div>
     <canvas class="boot-wave" id="preWave"></canvas>
     <pre class="boot-log" id="bootLog"></pre>
     <div class="pre-bar"><i id="preBar"></i></div>
@@ -44,16 +69,21 @@
 
   <section class="hero">
     <div class="hero-wrap">
-      <div class="hero-tag reveal"><span class="dot"></span>Neural Performance Lab · System Online</div>
+      <div class="brand-lockup reveal">
+        <svg class="brand-logo" viewBox="0 0 100 100"><use href="#nervify-mark"/></svg>
+        <span class="wordmark">NERVIFY</span>
+        <span class="lockup-div"></span>
+        <span class="lockup-sub">Neural Performance Lab</span>
+      </div>
       <h1 class="hero-title">
         <span class="t1 reveal">MYO</span><span class="t2 reveal">FORCE</span>
       </h1>
-      <div class="hero-kicker reveal">// MEASURING THE SIGNAL BEHIND STRENGTH</div>
+      <div class="hero-kicker reveal">// QUANTIFYING THE SIGNAL BEHIND STRENGTH</div>
 
       <div class="hero-sub-row">
         <p class="hero-sub reveal">
-          A next-generation instrument that reads the muscle's electrical command and
-          its mechanical force in real time — quantifying neuromuscular efficiency to
+          A NERVIFY instrument that reads the muscle's electrical command and its
+          mechanical force in real time — measuring neuromuscular efficiency to
           track recovery after carpal tunnel release.
         </p>
         <div class="hero-meta reveal">
@@ -74,12 +104,12 @@
 
   <section class="act" id="act1" data-act="0">
     <div class="act-inner reveal">
-      <div class="act-index">STATION 01 — TWO SIGNALS</div>
-      <h2>A command, and a response.</h2>
+      <div class="act-index">STATION 01 — THE MOTOR UNIT</div>
+      <h2>A command travels from nerve to muscle.</h2>
       <p>
-        Surface EMG captures the muscle's electrical command — motor units recruiting
-        and firing. The load cell captures the response — force. Apart, neither reveals
-        whether the muscle is working well. The network above carries both.
+        A motor neuron fires an action potential down its axon. At the neuromuscular
+        junction the signal crosses to the muscle fibre, which contracts. EMG records
+        the command; the load cell records the force. MyoForce captures both.
       </p>
     </div>
   </section>
@@ -117,17 +147,13 @@
 
   <header class="hud-rail">
     <div class="brand" onclick="exitConsole()" title="Back to overview">
-      <span class="brand-reticle"></span>
+      <svg class="brand-logo sm" viewBox="0 0 100 100"><use href="#nervify-mark"/></svg>
       <span class="logo">MYO<span>FORCE</span></span>
-      <span class="sub">NEURAL LAB</span>
+      <span class="sub">by NERVIFY</span>
     </div>
     <div class="grow"></div>
-    <div class="tele">
-      <span class="tk">PHASE</span><span class="tv" id="phasePill">idle</span>
-    </div>
-    <div class="conn" id="conn">
-      <span class="dot" id="connDot"></span><span id="connText">Connecting…</span>
-    </div>
+    <div class="tele"><span class="tk">PHASE</span><span class="tv" id="phasePill">idle</span></div>
+    <div class="conn" id="conn"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></div>
     <button class="icon-btn" id="settingsBtn" title="API settings" onclick="toggleSettings()">⚙</button>
     <div class="settings-pop" id="settingsPop">
       <h5>// BACKEND API BASE</h5>
@@ -137,7 +163,6 @@
   </header>
 
   <div class="deck">
-    <!-- neural spine = workflow -->
     <aside class="spine">
       <button class="rail-back" onclick="exitConsole()">◄ OVERVIEW</button>
       <div class="spine-label">PROTOCOL</div>
@@ -148,13 +173,11 @@
       </div>
     </aside>
 
-    <!-- focal holographic module -->
     <main class="stage">
       <div class="content" id="content"></div>
     </main>
   </div>
 
-  <!-- docked oscilloscope instrument -->
   <div class="instrument-dock">
     <div class="osc-frame">
       <div class="osc-head"><span>// LIVE SIGNAL</span><span class="osc-legend"><i class="f"></i>FORCE <i class="e"></i>EMG · 15s</span></div>
@@ -178,7 +201,7 @@
 <script src="/static/vendor/three.min.js"></script>
 <script src="/static/vendor/gsap.min.js"></script>
 <script src="/static/vendor/ScrollTrigger.min.js"></script>
-<script src="/static/scene.js?v=3"></script>
-<script src="/static/app.js?v=15"></script>
+<script src="/static/scene.js?v=6"></script>
+<script src="/static/app.js?v=18"></script>
 </body>
 </html>

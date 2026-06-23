@@ -26,7 +26,13 @@ def serve_ui() -> FileResponse:
         raise HTTPException(
             status_code=404, detail="UI not found. Expected frontend/index.html."
         )
-    return FileResponse(index, media_type="text/html")
+    # Always revalidate the HTML so updated CSS/JS (with bumped ?v=) is picked
+    # up on a normal reload instead of being masked by a stale cached page.
+    return FileResponse(
+        index,
+        media_type="text/html",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 @router.get("/")
