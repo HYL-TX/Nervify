@@ -1,9 +1,15 @@
-# Nervify — NME Measurement
+# MyoForce — Neuromuscular Efficiency Measurement
 
-Nervify measures thumb-muscle **Neuromuscular Efficiency (NME)** by recording
-force and EMG during a controlled contraction from an ESP32, computing NME, and
-tracking a patient's recovery across sessions. It ships with a guided web UI and
-a per-patient PDF report.
+**MyoForce** (by Team **Nervify**) measures thumb-muscle **Neuromuscular
+Efficiency (NME)** to track a patient's **recovery after carpal tunnel release**.
+It records force and EMG during a controlled contraction from an ESP32, computes
+NME, and follows the trend across sessions — shipping with a guided web UI and a
+per-patient PDF recovery report.
+
+> *Naming:* **MyoForce** is the product; **Nervify** is the team. The codebase,
+> this repository, and config identifiers (e.g. `NERVIFY_SERIAL_PORT`) keep the
+> original **Nervify** name — only the patient/clinician-facing UI and report are
+> branded MyoForce.
 
 > **NME = %MVC force ÷ %MVC EMG.** Both values are normalized to the session's
 > own maximum voluntary contraction (MVC), so a higher NME means more force per
@@ -108,11 +114,16 @@ report).
 
 The **▶ Run demo** button (sidebar) plays a full session automatically — setup,
 MVC calibration, the 20% trial, and the result — using realistic synthetic
-palmar-pinch signals (~0–3 N). It's meant for presentations and works with or
-without the ESP32 connected: while the demo runs, the backend ignores the real
-device so the synthetic signal isn't disturbed. Demo sessions are saved under
-patient **DEMO** — delete those entries from `data/sessions.json` if you don't
-want them.
+palmar-pinch signals (~0–3 N). So the recovery trend and PDF chart are
+meaningful, it first **seeds a short prior history** for patient **DEMO** (three
+back-dated sessions with rising NME `0.62 → 0.71 → 0.83` and rising MVC force
+`2.4 → 3.0 N`), then runs a live final session that lands around **0.95
+("Improving")** — both recovery signals, strength magnitude and NME quality,
+visibly improving. It's meant for presentations and works with or without the
+ESP32 connected: while the demo runs, the backend ignores the real device so the
+synthetic signal isn't disturbed. Re-running **replaces** the previous DEMO
+history (so runs don't accumulate); delete those entries from
+`data/sessions.json` if you don't want them at all.
 
 ---
 
@@ -156,6 +167,7 @@ tests/                test_serial.py (raw serial sniffer)
 | `GET·POST /setup` | Read / set target % of MVC |
 | `POST /setup/tare` | Tell the device to re-zero (tare) the load cell |
 | `POST /demo/start` · `/demo/stop` | Enter / leave presentation demo mode (serial reader ignores the real device) |
+| `POST /demo/seed-history` | Plant a back-dated, rising-NME session history for the demo patient |
 | `GET /workflow` | Step-by-step completion overview |
 | `POST /session/start` · `/session/prepare` · `/session/reset` | Session lifecycle |
 | `POST /mvc/start` · `/mvc/finish` · `/mvc/skip-rest` · `/mvc/restart` | MVC capture (×3); skip the 60 s rest lock; restart calibration |
