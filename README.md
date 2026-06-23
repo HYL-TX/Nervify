@@ -1,9 +1,10 @@
 # MyoForce — Neuromuscular Efficiency Measurement
 
 **MyoForce** (by Team **Nervify**) measures thumb-muscle **Neuromuscular
-Efficiency (NME)** by recording force and EMG during a controlled contraction
-from an ESP32, computing NME, and tracking a patient's recovery across sessions.
-It ships with a guided web UI and a per-patient PDF report.
+Efficiency (NME)** to track a patient's **recovery after carpal tunnel release**.
+It records force and EMG during a controlled contraction from an ESP32, computes
+NME, and follows the trend across sessions — shipping with a guided web UI and a
+per-patient PDF recovery report.
 
 > *Naming:* **MyoForce** is the product; **Nervify** is the team. The codebase,
 > this repository, and config identifiers (e.g. `NERVIFY_SERIAL_PORT`) keep the
