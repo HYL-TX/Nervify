@@ -2,54 +2,183 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MyoForce — NME Measurement</title>
-<link rel="stylesheet" href="/static/styles.css?v=2" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#030711" />
+<title>MYOFORCE // Neural Performance Lab</title>
+<meta name="description" content="MyoForce by Nervify — a neural performance lab for thumb neuromuscular efficiency, from force and EMG." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/styles.css?v=5" />
 </head>
-<body>
-<header>
-  <div>
-    <div class="logo">Myo<span>Force</span></div>
-    <div class="sub">by Nervify · Neuromuscular Efficiency Measurement</div>
-  </div>
-  <div class="grow"></div>
-  <div class="settings">
-    <label style="margin:0">API</label>
-    <input id="apiBase" type="text" placeholder="http://127.0.0.1:8000" />
-  </div>
-  <div class="conn" id="conn">
-    <span class="dot" id="connDot"></span>
-    <span id="connText">Connecting…</span>
-  </div>
-  <div class="pill" id="phasePill">phase: idle</div>
-</header>
+<body class="no-scroll">
 
-<div class="wrap">
-  <!-- Sidebar -->
-  <aside>
-    <nav class="stepper" id="stepper"></nav>
-    <div class="live">
-      <h4>Live Signal</h4>
-      <canvas id="liveChart" style="width:100%;height:96px;display:block;margin:4px 0 10px;border-radius:8px;background:#0c141d;border:1px solid var(--line)"></canvas>
-      <div class="row" style="font-size:11px;color:var(--muted);margin:-4px 0 6px"><span style="color:var(--accent)">▬ force</span><span style="color:var(--blue)">▬ EMG</span><span>last 15s</span></div>
-      <div class="row"><span>Force</span><span><b id="liveForce">—</b><span class="unit">N</span></span></div>
-      <div class="row"><span class="muted" style="font-size:12px">≈ mass</span><span class="muted" style="font-size:12px"><b id="liveForceG">—</b> <span class="unit">g</span></span></div>
-      <div class="row"><span>EMG</span><span><b id="liveEmg">—</b><span class="unit">raw</span></span></div>
-      <div class="row"><span class="muted" style="font-size:12px">Samples</span><span class="muted" id="liveSamples" style="font-size:12px">0</span></div>
-      <div class="row"><span class="muted" style="font-size:12px">Rejected</span><span class="muted" id="liveRejected" style="font-size:12px">0</span></div>
-      <button class="btn ghost" style="width:100%;margin-top:10px" onclick="tareLoadCell()">Tare load cell</button>
-      <div class="muted" id="tareStatus" style="font-size:11px;margin-top:4px"></div>
+<!-- layered field: static fallback → WebGL → grain -->
+<div id="bg-fallback"></div>
+<canvas id="webgl"></canvas>
+<div id="grain"></div>
+
+<!-- Fixed holographic viewport frame (decorative HMI overlay) -->
+<div id="hud-frame" aria-hidden="true">
+  <span class="corner tl"></span><span class="corner tr"></span>
+  <span class="corner bl"></span><span class="corner br"></span>
+  <div class="hud-edge top">MYOFORCE&nbsp;//&nbsp;NEURAL&nbsp;PERFORMANCE&nbsp;LAB</div>
+  <div class="hud-edge left">NERVIFY · EMG × FORCE</div>
+  <div class="hud-edge right" id="hudClock">--:--:--</div>
+  <div class="hud-reticle"></div>
+</div>
+
+<!-- =================== BOOT / PRELOADER =================== -->
+<div id="preloader">
+  <div class="boot">
+    <div class="boot-mark">MYO<b>FORCE</b> <span>v1.0</span></div>
+    <canvas class="boot-wave" id="preWave"></canvas>
+    <pre class="boot-log" id="bootLog"></pre>
+    <div class="pre-bar"><i id="preBar"></i></div>
+    <div class="pre-pct" id="prePct">BOOT · 0%</div>
+  </div>
+</div>
+
+<!-- =================== LANDING =================== -->
+<div id="landing">
+
+  <section class="hero">
+    <div class="hero-wrap">
+      <div class="hero-tag reveal"><span class="dot"></span>Neural Performance Lab · System Online</div>
+      <h1 class="hero-title">
+        <span class="t1 reveal">MYO</span><span class="t2 reveal">FORCE</span>
+      </h1>
+      <div class="hero-kicker reveal">// MEASURING THE SIGNAL BEHIND STRENGTH</div>
+
+      <div class="hero-sub-row">
+        <p class="hero-sub reveal">
+          A next-generation instrument that reads the muscle's electrical command and
+          its mechanical force in real time — quantifying neuromuscular efficiency to
+          track recovery after carpal tunnel release.
+        </p>
+        <div class="hero-meta reveal">
+          <span>CH·01<b>FORCE / N</b></span>
+          <span>CH·02<b>EMG / APB</b></span>
+          <span>OUT<b>NME RATIO</b></span>
+        </div>
+      </div>
+
+      <div class="hero-cta reveal">
+        <button class="btn lg" onclick="enterConsole()">Initialise Session <i>→</i></button>
+        <button class="btn ghost lg" onclick="enterConsole(); runDemo();">▶ Run Demo</button>
+        <a class="btn ghost lg" href="#act1">The Science</a>
+      </div>
     </div>
-    <button class="btn" style="width:100%;margin-top:12px" id="demoBtn" onclick="runDemo()">▶ Run demo</button>
-    <button class="btn ghost" style="width:100%;margin-top:8px" onclick="goStep('about')">ℹ About NME</button>
-  </aside>
+    <div class="scroll-cue">scroll to explore</div>
+  </section>
 
-  <!-- Content -->
-  <main class="content" id="content"></main>
+  <section class="act" id="act1" data-act="0">
+    <div class="act-inner reveal">
+      <div class="act-index">STATION 01 — TWO SIGNALS</div>
+      <h2>A command, and a response.</h2>
+      <p>
+        Surface EMG captures the muscle's electrical command — motor units recruiting
+        and firing. The load cell captures the response — force. Apart, neither reveals
+        whether the muscle is working well. The network above carries both.
+      </p>
+    </div>
+  </section>
+
+  <section class="act right" id="act2" data-act="1">
+    <div class="act-inner reveal">
+      <div class="act-index">STATION 02 — ONE RATIO</div>
+      <h2>Efficiency is force per unit of effort.</h2>
+      <p>
+        Both signals are normalised to the session's own maximum, then divided. A higher
+        ratio means more force for the same electrical activity — a hallmark of healthy
+        motor control, and a target of rehabilitation.
+      </p>
+      <div class="formula"><span class="nme">NME</span> = <span class="f">%MVC force</span> ÷ <span class="e">%MVC EMG</span></div>
+    </div>
+  </section>
+
+  <section class="act" id="act3" data-act="2">
+    <div class="act-inner reveal">
+      <div class="act-index">STATION 03 — RECOVERY</div>
+      <h2>Across sessions, a recovery curve.</h2>
+      <p>
+        No population norm exists for thumb NME, so progress is read against the patient's
+        own previous session. Session after session, the trend tells the recovery story —
+        exported to a per-patient report.
+      </p>
+      <div class="act-cta"><button class="btn lg" onclick="enterConsole()">Enter the Lab <i>→</i></button></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- =================== CONSOLE (the instrument) =================== -->
+<div id="console">
+
+  <header class="hud-rail">
+    <div class="brand" onclick="exitConsole()" title="Back to overview">
+      <span class="brand-reticle"></span>
+      <span class="logo">MYO<span>FORCE</span></span>
+      <span class="sub">NEURAL LAB</span>
+    </div>
+    <div class="grow"></div>
+    <div class="tele">
+      <span class="tk">PHASE</span><span class="tv" id="phasePill">idle</span>
+    </div>
+    <div class="conn" id="conn">
+      <span class="dot" id="connDot"></span><span id="connText">Connecting…</span>
+    </div>
+    <button class="icon-btn" id="settingsBtn" title="API settings" onclick="toggleSettings()">⚙</button>
+    <div class="settings-pop" id="settingsPop">
+      <h5>// BACKEND API BASE</h5>
+      <p class="hint" style="margin-top:0">Point the interface at the FastAPI server. Defaults to this origin.</p>
+      <div class="settings"><input id="apiBase" type="text" placeholder="http://127.0.0.1:8000" /></div>
+    </div>
+  </header>
+
+  <div class="deck">
+    <!-- neural spine = workflow -->
+    <aside class="spine">
+      <button class="rail-back" onclick="exitConsole()">◄ OVERVIEW</button>
+      <div class="spine-label">PROTOCOL</div>
+      <nav class="stepper" id="stepper"></nav>
+      <div class="spine-actions">
+        <button class="btn" id="demoBtn" onclick="runDemo()">▶ RUN DEMO</button>
+        <button class="btn ghost" onclick="goStep('about')">ℹ ABOUT NME</button>
+      </div>
+    </aside>
+
+    <!-- focal holographic module -->
+    <main class="stage">
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <!-- docked oscilloscope instrument -->
+  <div class="instrument-dock">
+    <div class="osc-frame">
+      <div class="osc-head"><span>// LIVE SIGNAL</span><span class="osc-legend"><i class="f"></i>FORCE <i class="e"></i>EMG · 15s</span></div>
+      <canvas id="liveChart"></canvas>
+    </div>
+    <div class="osc-readout">
+      <div class="ro"><span class="rk">FORCE</span><span class="rv"><b id="liveForce">—</b><i>N</i></span></div>
+      <div class="ro"><span class="rk">≈ MASS</span><span class="rv"><b id="liveForceG">—</b><i>g</i></span></div>
+      <div class="ro"><span class="rk">EMG</span><span class="rv"><b id="liveEmg">—</b><i>raw</i></span></div>
+      <div class="ro"><span class="rk">SAMPLES</span><span class="rv"><b id="liveSamples">0</b></span></div>
+      <div class="ro"><span class="rk">REJECTED</span><span class="rv"><b id="liveRejected">0</b></span></div>
+      <button class="btn ghost sm" onclick="tareLoadCell()">TARE</button>
+      <span class="muted" id="tareStatus" style="font-size:10px"></span>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
 
-<script src="/static/app.js?v=12"></script>
+<!-- Vendored libraries (offline). Core app degrades gracefully if absent. -->
+<script src="/static/vendor/three.min.js"></script>
+<script src="/static/vendor/gsap.min.js"></script>
+<script src="/static/vendor/ScrollTrigger.min.js"></script>
+<script src="/static/scene.js?v=3"></script>
+<script src="/static/app.js?v=15"></script>
 </body>
 </html>

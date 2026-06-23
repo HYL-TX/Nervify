@@ -87,7 +87,7 @@ function renderStepper() {
     const div = document.createElement("div");
     div.className = "step" + (s.id === activeStep ? " active" : "") + (stepDone(s.id) ? " done" : "");
     div.innerHTML = `<div class="num">${stepDone(s.id) ? "✓" : (i)}</div>
-      <div><div>${s.title}</div><small>${s.sub}</small></div>`;
+      <div><div class="st-title">${s.title}</div><small>${s.sub}</small></div>`;
     div.onclick = () => { activeStep = s.id; render(); };
     nav.appendChild(div);
   });
@@ -256,8 +256,8 @@ function panelResult() {
                    : r.trend === "stable" ? "Similar efficiency to last session"
                    : "No previous session to compare";
   const warn = (r.emg_clipped && (r.warnings || []).length)
-    ? `<div style="margin-bottom:16px;padding:12px 14px;border-radius:10px;background:rgba(248,113,113,.12);border:1px solid var(--bad);color:var(--bad);font-size:13px">
-         <b>⚠ EMG clipped — this NME is unreliable.</b><ul style="margin:6px 0 0 18px;padding:0">
+    ? `<div class="warnbox">
+         <b>⚠ EMG clipped — this NME is unreliable.</b><ul>
          ${r.warnings.map(w => `<li>${w}</li>`).join("")}</ul></div>`
     : "";
   return `
@@ -265,10 +265,28 @@ function panelResult() {
     <div><h2>NME Result</h2><p>Session ${r.session_id.slice(0,8)}… · patient ${r.patient_id || "—"} · ${fmtTime(r.timestamp)}</p></div></div>
     <div class="bd">
       ${warn}
-      <div class="btn-row" style="margin-bottom:16px"><button class="btn ghost" onclick="downloadReport('${(r.patient_id || '').replace(/['\\]/g, '\\$&')}')">⬇ Download PDF report${r.patient_id ? ` · ${r.patient_id}` : " · unassigned"}</button></div>
-      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-        <div class="stat hero" style="min-width:160px"><div class="v" style="font-size:40px;color:var(--accent)">${fnum(r.nme,3)}</div><div class="k">NME <span style="font-weight:normal;font-size:10px;color:var(--muted)">(higher = better)</span></div></div>
-        <div class="trend ${r.trend}">${arrow}<div class="k" style="font-size:13px">${trendLabel}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${trendNote}</div></div>
+      <div class="btn-row" style="margin-bottom:18px"><button class="btn ghost" onclick="downloadReport('${(r.patient_id || '').replace(/['\\]/g, '\\$&')}')">⬇ Download PDF report${r.patient_id ? ` · ${r.patient_id}` : " · unassigned"}</button></div>
+      <div class="result-hero">
+        <div class="nme-ring">
+          <svg width="168" height="168" viewBox="0 0 168 168">
+            <defs><linearGradient id="nmeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#67e8f9"/><stop offset="55%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#f0abfc"/>
+            </linearGradient></defs>
+            <circle class="ring-bg" cx="84" cy="84" r="74"></circle>
+            <circle class="ring-f" id="nmeArc" cx="84" cy="84" r="74"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="v" id="nmeRingVal">${fnum(r.nme,3)}</div>
+            <div class="k">NME</div>
+          </div>
+        </div>
+        <div>
+          <div class="trend ${r.trend}"><span class="arrow">${arrow || "•"}</span>
+            <div class="k">${trendLabel}</div>
+            <div class="note">${trendNote}</div>
+          </div>
+          <div class="hint" style="margin-top:16px;max-width:280px">NME = %MVC&nbsp;force ÷ %MVC&nbsp;EMG — <b style="color:var(--accent)">higher is better</b>. The ring is scaled for display; read the trend against this patient's own history.</div>
+        </div>
       </div>
       <div class="grid3" style="margin-top:18px">
         <div class="stat"><div class="v">${fnum(r.percent_mvc_force,1)}%</div><div class="k">%MVC force</div></div>
@@ -341,6 +359,89 @@ function blocked(msg, goto) {
 function goStep(id) { activeStep = id; render(); }
 function currentWorkflowStep() { return (status && status.phase) ? phaseToStep(status.phase) : "setup"; }
 function fmtTime(iso) { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString(); }
+
+/* ---------------- Shell: landing ⇄ console + premium micro-interactions ----------------
+   These functions are presentation-only. They never touch the measurement
+   pipeline; they move between the cinematic landing and the working console,
+   and drive the optional WebGL scene (window.Nervify3D) + GSAP. Everything is
+   guarded so the tool behaves identically if GSAP / Three.js are unavailable. */
+const reduceMotionUI = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+let consoleOpen = false;
+
+function enterConsole() {
+  if (consoleOpen) return;
+  consoleOpen = true;
+  const con = document.getElementById("console");
+  const land = document.getElementById("landing");
+  document.body.classList.add("no-scroll");
+  document.body.classList.add("in-console");
+  con.classList.add("live");
+  const body = con.querySelector(".deck");
+  if (body) body.scrollTop = 0;
+  if (window.Nervify3D) Nervify3D.toScene("console");
+  if (window.gsap && !reduceMotionUI) {
+    gsap.to(land, { opacity: 0, duration: 0.5, ease: "power2.inOut", onComplete: () => { land.style.visibility = "hidden"; } });
+    gsap.fromTo(con, { opacity: 0 }, { opacity: 1, duration: 0.7, ease: "power2.out" });
+    gsap.from(".hud-rail, .spine > *, .stage, .instrument-dock", { opacity: 0, y: 18, duration: 0.7, stagger: 0.06, ease: "power3.out", delay: 0.2 });
+  } else {
+    land.style.visibility = "hidden"; con.style.opacity = "1";
+  }
+  lastAnimStep = null;   // let the active panel animate in
+  render();
+}
+
+function exitConsole() {
+  if (!consoleOpen) return;
+  consoleOpen = false;
+  const con = document.getElementById("console");
+  const land = document.getElementById("landing");
+  land.style.visibility = "visible";
+  document.body.classList.remove("no-scroll");
+  document.body.classList.remove("in-console");
+  if (window.Nervify3D) Nervify3D.toScene("hero");
+  if (window.gsap && !reduceMotionUI) {
+    gsap.to(land, { opacity: 1, duration: 0.6, ease: "power2.out" });
+    gsap.to(con, { opacity: 0, duration: 0.45, ease: "power2.inOut", onComplete: () => { con.classList.remove("live"); con.style.opacity = ""; } });
+  } else {
+    con.classList.remove("live"); con.style.opacity = ""; land.style.opacity = "1";
+  }
+  if (window.ScrollTrigger) { try { ScrollTrigger.refresh(); } catch (e) {} }
+}
+
+function toggleSettings() {
+  const pop = document.getElementById("settingsPop");
+  if (pop) pop.classList.toggle("open");
+}
+document.addEventListener("click", (e) => {
+  const pop = document.getElementById("settingsPop");
+  const btn = document.getElementById("settingsBtn");
+  if (!pop || !pop.classList.contains("open")) return;
+  if (pop.contains(e.target) || (btn && btn.contains(e.target))) return;
+  pop.classList.remove("open");
+});
+
+/* Animate the NME ring + count-up when the Result panel mounts. Display-only:
+   the ring is scaled for legibility; the printed number is the real NME. */
+function animateResult() {
+  const r = session && session.result;
+  if (!r) return;
+  const arc = document.getElementById("nmeArc");
+  const valEl = document.getElementById("nmeRingVal");
+  if (!arc || !valEl) return;
+  const C = 2 * Math.PI * 74;
+  const frac = Math.max(0.02, Math.min(1, (r.nme || 0) / 1.5)); // 1.5 ≈ full ring (display only)
+  arc.style.strokeDasharray = C;
+  if (window.gsap && !reduceMotionUI) {
+    const obj = { v: 0 };
+    gsap.fromTo(arc, { strokeDashoffset: C }, { strokeDashoffset: C * (1 - frac), duration: 1.1, ease: "power2.out" });
+    gsap.to(obj, { v: r.nme || 0, duration: 1.1, ease: "power2.out", onUpdate: () => { valEl.textContent = obj.v.toFixed(3); } });
+  } else {
+    arc.style.strokeDashoffset = C;
+    valEl.textContent = (r.nme || 0).toFixed(3);
+    requestAnimationFrame(() => { arc.style.strokeDashoffset = C * (1 - frac); });
+  }
+  if (window.Nervify3D) Nervify3D.pulse("complete");
+}
 
 /* ---------------- About / reference panel (outside the measurement workflow) ---------------- */
 function panelAbout() {
@@ -435,8 +536,17 @@ function render() {
   }
   c.innerHTML = html;
   lastRenderSig = viewSignature();
-  if (activeStep === "result") loadHistory();
+  if (activeStep === "result") { loadHistory(); animateResult(); }
+  // Animate cards in only when the active panel actually changes, so background
+  // status polls (which re-render in place) don't replay the entrance every cycle.
+  if (consoleOpen && activeStep !== lastAnimStep) {
+    lastAnimStep = activeStep;
+    if (window.gsap && !reduceMotionUI) {
+      gsap.from("#content > .card", { opacity: 0, y: 22, duration: 0.6, stagger: 0.08, ease: "power3.out" });
+    }
+  }
 }
+let lastAnimStep = null;
 
 /* ---------------- Actions ---------------- */
 async function saveSetup() {
@@ -625,7 +735,7 @@ async function savePrep() {
 let mvcStartClient = null;     // client-side hold start, for a smooth countdown
 let mvcAutoFinishing = false;
 async function startMvc() { try { await api("/mvc/start", "POST", {}); mvcStartClient = Date.now(); toast("MVC recording — pinch hard!", "ok"); await refreshStatus(); } catch (e) { fail(e); } }
-async function finishMvc() { try { const r = await api("/mvc/finish", "POST", {}); toast("Attempt recorded.", "ok"); session = r; await refreshStatus(); } catch (e) { fail(e); } finally { mvcStartClient = null; } }
+async function finishMvc() { try { const r = await api("/mvc/finish", "POST", {}); toast("Attempt recorded.", "ok"); if (window.Nervify3D) Nervify3D.pulse("mvc"); session = r; await refreshStatus(); } catch (e) { fail(e); } finally { mvcStartClient = null; } }
 async function skipMvcRest() { try { const r = await api("/mvc/skip-rest", "POST", {}); toast("Rest skipped — ready for next MVC.", "ok"); session = r; await refreshStatus(); } catch (e) { fail(e); } }
 async function restartMvc() {
   if (!confirm("Discard all MVC attempts and start the calibration over? Saved session results are kept.")) return;
@@ -665,7 +775,8 @@ async function refreshStatus() {
     status = await api("/");
     session = status.session;
     setConn(status.serial, true);
-    document.getElementById("phasePill").textContent = "phase: " + (status.phase || "idle");
+    document.getElementById("phasePill").textContent = (status.phase || "idle");
+    if (window.Nervify3D) Nervify3D.setPhase(status.phase || "idle");
     // follow backend phase
     const target = phaseToStep(status.phase);
     if (autoFollow) activeStep = target;
@@ -697,6 +808,7 @@ async function pollData() {
     setLiveForce(d);
     document.getElementById("liveEmg").textContent = Math.round(d.emg ?? 0);
     updateTrialLive(d);
+    if (window.Nervify3D) Nervify3D.setLive(d.force ?? 0, d.emg ?? 0);
   } catch (e) { /* ignore transient */ }
 }
 
@@ -861,6 +973,7 @@ function connectStream() {
     setLiveForce(d);
     document.getElementById("liveEmg").textContent = Math.round(d.emg ?? 0);
     pushLive(d);
+    if (window.Nervify3D) Nervify3D.setLive(d.force ?? 0, d.emg ?? 0);
     setConn({ connected: d.connected, samples_received: d.samples_received, lines_rejected: d.lines_rejected }, true);
     updateTrialLive(d);
   };
