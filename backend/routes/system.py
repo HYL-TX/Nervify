@@ -5,14 +5,16 @@
 
 import asyncio
 import json
+import uuid
 from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 
-from .. import config, nme, serial_io, session, state
-from ..models import ManualSampleRequest, SetupRequest
+from .. import config, nme, serial_io, session, state, storage
+from ..models import DemoSeedRequest, ManualSampleRequest, SetupRequest
 
 router = APIRouter()
 
@@ -159,6 +161,71 @@ def demo_stop() -> dict[str, Any]:
     with state.lock:
         state.demo_active = False
     return {"status": "ok", "demo_active": False}
+
+
+@router.post("/demo/seed-history")
+def demo_seed_history(req: DemoSeedRequest) -> dict[str, Any]:
+    """Plant a series of completed sessions with rising NME for the demo patient
+    so the recovery trend and the PDF report chart have history to display. The
+    presentation demo calls this before running its live final session.
+
+    Each seeded session holds force at the 20% target (so %MVC force ≈ 20) and
+    backs out %MVC EMG from the requested NME; MVC force rises across sessions so
+    the demo shows both recovery signals — strength magnitude and NME quality —
+    improving together. Sessions are back-dated `days_apart` apart."""
+    if req.replace:
+        storage.delete_patient_sessions(req.patient_id)
+
+    n = len(req.nme_series)
+    forces = req.mvc_force_series or [round(2.4 + 0.3 * i, 2) for i in range(n)]
+    now = datetime.now(timezone.utc)
+
+    seeded: list[dict[str, Any]] = []
+    prev_nme: float | None = None
+    for i, nme_value in enumerate(req.nme_series):
+        mvc_force = forces[i] if i < len(forces) else forces[-1]
+        mvc_emg = req.mvc_emg
+        percent_mvc_force = 20.0
+        percent_mvc_emg = percent_mvc_force / nme_value
+        target_force = mvc_force * 0.20
+        total_emg_rms = mvc_emg * percent_mvc_emg / 100.0
+        days_ago = (n - i) * req.days_apart      # oldest first; newest ≈ days_apart ago
+        timestamp = (now - timedelta(days=days_ago)).isoformat()
+
+        if prev_nme is None:
+            trend = "baseline"
+        elif (nme_value - prev_nme) / prev_nme > 0.05:
+            trend = "up"
+        elif (nme_value - prev_nme) / prev_nme < -0.05:
+            trend = "down"
+        else:
+            trend = "stable"
+        prev_nme = nme_value
+
+        result = {
+            "session_id": str(uuid.uuid4()),
+            "patient_id": req.patient_id,
+            "timestamp": timestamp,
+            "mvc_force": mvc_force,
+            "mvc_emg": mvc_emg,
+            "target_percentage": percent_mvc_force,
+            "target_force": target_force,
+            "target_range": nme.target_range(target_force),
+            "force_n": target_force,
+            "total_emg_rms": total_emg_rms,
+            "percent_mvc_force": percent_mvc_force,
+            "percent_mvc_emg": percent_mvc_emg,
+            "nme": round(nme_value, 3),
+            "trend": trend,
+            "emg_clipped": False,
+            "emg_baseline": 0.0,
+            "warnings": [],
+            "trial": {},
+        }
+        storage.save_session_result(result)
+        seeded.append({"nme": result["nme"], "timestamp": timestamp, "trend": trend})
+
+    return {"status": "ok", "patient_id": req.patient_id, "seeded": seeded}
 
 
 @router.get("/workflow")

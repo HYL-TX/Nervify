@@ -504,6 +504,18 @@ async function runDemo() {
   try {
     await api("/demo/start", "POST", {});            // suppress real device samples
 
+    // Plant a prior recovery trend (NME and MVC force both rising) so the live
+    // session below reads "Improving" and the history chart / PDF report show a
+    // believable multi-session recovery story.
+    toast("Demo: loading this patient's prior sessions…", "ok");
+    await api("/demo/seed-history", "POST", {
+      patient_id: "DEMO",
+      nme_series: [0.62, 0.71, 0.83],
+      mvc_force_series: [2.4, 2.7, 3.0],
+      days_apart: 14,
+      replace: true,
+    });
+
     toast("Demo: configuring device (target 20% MVC)…", "ok");
     await api("/setup", "POST", { target_percentage: 20 });
     activeStep = "setup"; await refreshStatus(); render(); await _sleep(2200);
@@ -524,9 +536,10 @@ async function runDemo() {
     // periods in a real session.
     const _rest = ms => _demoFeed(() => _jit(0.0, 0.12), () => _jit(120, 30), ms);
 
-    // MVC: three maximal palmar pinches. Real efforts differ attempt to attempt,
-    // so the peaks vary (~2.7–3.0 N — a believable weak palmar-pinch maximum).
-    const peakForce = [2.7, 3.0, 2.85];
+    // MVC: three maximal palmar pinches. Real efforts differ attempt to attempt.
+    // Peaks (~3.0–3.3 N) continue the seeded strength-recovery trend (2.4→3.0 N),
+    // so this final session is the strongest yet — recovery magnitude improving.
+    const peakForce = [3.0, 3.3, 3.15];
     const peakEmg = [1500, 1650, 1580];   // raw MyoWare envelope, below saturation
     activeStep = "mvc"; render();
     await _rest(3000);                                 // settle the baseline first
@@ -560,7 +573,10 @@ async function runDemo() {
       try {
         await api("/data", "POST", {
           force: target * ramp * tremor,
-          emg: (180 + 320 * ramp) * (1 + (Math.random() - 0.5) * 0.12),
+          // Low electrical effort at the 20% hold (~355 vs MVC ~1650) → high
+          // efficiency: %MVC EMG ≈ 21%, so NME ≈ 0.95 — "Improving" vs the
+          // seeded 0.83, continuing the recovery trend.
+          emg: (130 + 225 * ramp) * (1 + (Math.random() - 0.5) * 0.12),
         });
       } catch {}
       await _sleep(80);

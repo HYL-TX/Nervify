@@ -28,3 +28,14 @@ class PreparationRequest(BaseModel):
 class ManualSampleRequest(BaseModel):
     force: float
     emg: float
+
+
+class DemoSeedRequest(BaseModel):
+    """Plant a series of completed sessions with rising NME (and rising MVC
+    force) so the presentation demo has a recovery trend to display."""
+    patient_id: str = "DEMO"
+    nme_series: list[float] = Field(default_factory=lambda: [0.62, 0.71, 0.83])
+    mvc_force_series: Optional[list[float]] = None
+    mvc_emg: float = 1650.0
+    days_apart: int = 14
+    replace: bool = True
